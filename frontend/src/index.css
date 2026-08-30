@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-retro: 'VT323', monospace;
+  --font-typewriter: 'Courier Prime', monospace;
+  --font-modern: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  font-family: var(--font-typewriter);
+  background-color: #f3ede2;
+  color: #382c23;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+/* Retro Pixel Borders */
+.pixel-box {
+  border: 3px solid #3c2f25;
+  box-shadow: 3px 3px 0px #3c2f25;
+  background-color: #fffdfa;
+}
+
+.pixel-box-inset {
+  border: 2px solid #5a493e;
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.15);
+}
+
+.pixel-btn {
+  border: 2px solid #3c2f25;
+  box-shadow: 2px 2px 0px #3c2f25;
+  transition: all 0.1s ease;
+}
+
+.pixel-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #3c2f25;
+}
+
+.pixel-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #3c2f25;
+}
+
+/* Custom Pixel Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #25232d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #504860;
+  border: 1px solid #1a1820;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #736987;
+}
+
+/* Character Typing & Pulse Animations */
+@keyframes typing-bob {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+.animate-typing {
+  animation: typing-bob 0.4s infinite ease-in-out;
+}
+
+@keyframes bubble-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.speech-bubble {
+  animation: bubble-float 2s infinite ease-in-out;
+}
+
+/* CRT / Terminal Glow */
+.terminal-glow {
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+}

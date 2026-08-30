@@ -1,0 +1,20 @@
+{
+  "name": "ai-agency-backend",
+  "version": "1.0.0",
+  "description": "Node.js Express & WebSocket backend for AI Agent Company",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.7.0",
+    "uuid": "^10.0.0",
+    "ws": "^8.17.1"
+  }
+}
