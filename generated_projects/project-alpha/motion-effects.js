@@ -1,222 +1,214 @@
-Hello. I'm Elena. To turn a standard Todo list into a high-end interactive experience, we need to move away from linear transitions. I've implemented **Cubic-Bezier curves** for organic movement and **Spring-based physics** for the UI elements.
+Here is the production-ready implementation of `motion-effects.js`. I have structured this as a modular Class to ensure it doesn't pollute the global namespace and can be initialized easily.
 
-Below is the complete `motion-effects.js` and the accompanying CSS dynamics.
-
-### 1. The Motion CSS (Styles)
-Add this to your stylesheet. I've defined "Motion Tokens" as CSS variables so you can tweak the "feel" globally.
+### 1. The CSS Framework (`motion-styles.css`)
+Add these to your stylesheet to handle the hardware acceleration and base states.
 
 :root {
-    /* Motion Tokens */
-    --ease-out-expo = cubic-bezier(0.19, 1, 0.22, 1);
-    --ease-in-out-back = cubic-bezier(0.68, -0.55, 0.27, 1.55);
-    --spring-bounce = cubic-bezier(0.34, 1.56, 0.64, 1);
-    --transition-fast = 200ms var(--ease-out-expo);
-    --transition-medium = 400ms var(--ease-out-expo);
-    --transition-slow = 600ms var(--ease-out-expo);
+    --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Task Item Entry Animation */
-.todo-item {
-    transition: transform var(--transition-medium), opacity var(--transition-medium), box-shadow var(--transition-fast);
-    animation: slideIn 0.5s var(--ease-out-expo) backwards;
-}
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Interaction States */
-.todo-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-}
-
-.todo-item.completed {
-    opacity: 0.6;
-    transform: scale(0.98);
-    transition: all var(--transition-fast);
-}
-
-/* Button Micro-interactions */
-.btn-interactive {
-    transition: transform var(--transition-fast), filter var(--transition-fast);
-}
-
-.btn-interactive:active {
-    transform: scale(0.92);
-    filter: brightness(0.9);
-}
-
-/* Modal Spring Dynamics */
-.modal-overlay {
+.reveal {
     opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-medium);
+    transform: translateY(30px);
+    transition: var(--transition-smooth);
+    will-change: transform, opacity;
 }
 
-.modal-content {
-    transform: scale(0.8) translateY(30px);
-    transition: transform var(--transition-medium) var(--spring-bounce);
-}
-
-.modal-open .modal-overlay {
+.reveal.active {
     opacity: 1;
-    pointer-events: all;
+    transform: translateY(0);
 }
 
-.modal-open .modal-content {
-    transform: scale(1) translateY(0);
+.magnetic-wrap {
+    display: inline-block;
+    transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Particle Canvas */
-#motion-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
+.theme-transitioning {
+    transition: background-color 0.8s ease, color 0.8s ease !important;
+}
+
+.modal-spring {
+    transform: scale(0.9) opacity(0);
+    transition: var(--transition-spring);
+}
+
+.modal-spring.open {
+    transform: scale(1) opacity(1);
 }
 
 ### 2. The Logic (`motion-effects.js`)
 
 /**
  * motion-effects.js
- * Developed by Elena Rostova
- * Interaction & Motion Layer for Todo Application
+ * Creative Motion & Interaction Layer for Hotel Website
+ * Designed by Elena Rostova
  */
 
-const MotionEffects = (() => {
-    // Configuration
-    const CONFIG = {
-        particles: {
-            count: 20,
-            color: 'rgba(100, 149, 237, 0.15)',
-            speed: 0.5
-        },
-        staggerDelay: 0.05
-    };
+class HotelMotionEngine {
+    constructor() {
+        this.init();
+    }
 
-    let canvas, ctx, particles = [];
-
-    /**
-     * Initialize all motion layers
-     */
-    const init = () => {
-        setupCanvas();
-        setupInteractions();
-        animate();
-        console.log("✨ Motion Layer Active: Elena Rostova");
-    };
+    init() {
+        this.initRevealOnScroll();
+        this.initMagneticButtons();
+        this.initParticleField();
+        this.initModalDynamics();
+        this.initThemeToggle();
+        
+        // Optimization: Listen for resize to recalculate positions if necessary
+        window.addEventListener('resize', () => this.handleResize());
+    }
 
     /**
-     * Ambient Particle System
-     * Creates a subtle floating depth effect in the background
+     * Smooth Reveal on Scroll
+     * Uses IntersectionObserver for high performance
      */
-    const setupCanvas = () => {
-        canvas = document.createElement('canvas');
-        canvas.id = 'motion-canvas';
-        document.body.appendChild(canvas);
-        ctx = canvas.getContext('2d');
+    initRevealOnScroll() {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    // Once revealed, we can stop observing this element
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
 
-        for (let i = 0; i < CONFIG.particles.count; i++) {
-            particles.push(new Particle());
-        }
-    };
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
 
-    const resizeCanvas = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    };
+    /**
+     * Magnetic Button Interaction
+     * Attracts the button slightly toward the cursor for a tactile feel
+     */
+    initMagneticButtons() {
+        const magnets = document.querySelectorAll('.magnetic-wrap');
+        
+        magnets.forEach(magnet => {
+            magnet.addEventListener('mousemove', (e) => {
+                const rect = magnet.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const moveX = (e.clientX - centerX) * 0.4; // Strength factor
+                const moveY = (e.clientY - centerY) * 0.4;
+                
+                magnet.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            });
 
-    class Particle {
-        constructor() {
-            this.reset();
-        }
+            magnet.addEventListener('mouseleave', () => {
+                magnet.style.transform = `translate(0px, 0px)`;
+            });
+        });
+    }
 
-        reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 4 + 1;
-            this.speedX = (Math.random() - 0.5) * CONFIG.particles.speed;
-            this.speedY = (Math.random() - 0.5) * CONFIG.particles.speed;
-            this.opacity = Math.random() * 0.5;
-        }
+    /**
+     * Floating Particle Effects
+     * Creates subtle atmospheric floating elements (e.g., for Hero sections)
+     */
+    initParticleField() {
+        const container = document.querySelector('.particle-container');
+        if (!container) return;
 
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
+        const particleCount = 15;
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'hotel-particle';
+            
+            // Randomize position and animation delay
+            const size = Math.random() * 4 + 2 + 'px';
+            particle.style.width = size;
+            particle.style.height = size;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            particle.style.opacity = Math.random() * 0.5;
 
-            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-        }
-
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = CONFIG.particles.color);
-            ctx.fill();
+            container.appendChild(particle);
         }
     }
 
-    const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-            p.update();
-            p.draw();
+    /**
+     * Modal Spring Dynamics
+     * Handles the entrance and exit of booking modals
+     */
+    initModalDynamics() {
+        const modal = document.querySelector('.modal-spring');
+        const trigger = document.querySelector('.open-booking');
+        const close = document.querySelector('.close-modal');
+
+        if (!modal || !trigger) return;
+
+        trigger.addEventListener('click', () => {
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Prevent scroll
         });
-        requestAnimationFrame(animate);
-    };
+
+        close.addEventListener('click', () => {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        });
+    }
 
     /**
-     * Interaction Logic
+     * Theme Toggling Animations
+     * Smooth transition between Day and Night modes
      */
-    const setupInteractions = () => {
-        // 1. Staggered List Reveal
-        // Call this whenever the task list is rendered
-        window.revealTodoList = (items) => {
-            items.forEach((item, index) => {
-                item.style.animationDelay = `${index * CONFIG.staggerDelay}s`;
-            });
-        };
+    initThemeToggle() {
+        const toggle = document.querySelector('.theme-toggle');
+        if (!toggle) return;
 
-        // 2. Smooth Modal Toggle
-        const modal = document.querySelector('.modal-overlay');
-        const trigger = document.querySelector('.add-task-btn');
-        
-        if (trigger && modal) {
-            trigger.addEventListener('click', () => {
-                document.body.classList.add('modal-open');
-            });
+        toggle.addEventListener('click', () => {
+            document.body.classList.add('theme-transitioning');
+            
+            // Toggle theme class
+            document.body.classList.toggle('dark-mode');
+            
+            // Remove transition class after animation completes to maintain performance
+            setTimeout(() => {
+                document.body.classList.remove('theme-transitioning');
+            }, 800);
+        });
+    }
 
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) document.body.classList.remove('modal-open');
-            });
-        }
+    handleResize() {
+        // Reset animations or recalculate if layout shifts drastically
+    }
+}
 
-        // 3. Theme Toggle Transition
-        const themeToggle = document.querySelector('#theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                document.body.style.transition = 'background-color 0.5s var(--ease-out-expo)';
-                document.body.classList.toggle('dark-mode');
-            });
-        }
-    };
+// Initialize on DOM content loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.HotelMotion = new HotelMotionEngine();
+});
 
-    return { init };
-})();
+### 3. Supplementary Particle CSS
+Add this to your CSS to enable the floating particle movement.
 
-// Initialize on DOM Load
-document.addEventListener('DOMContentLoaded', MotionEffects.init);
+.particle-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+}
 
-### How to integrate:
-1. **HTML**: Ensure your "Add Task" button has the class `.add-task-btn` and the modal has the `.modal-overlay` and `.modal-content` structure.
-2. **Implementation**: In your main `app.js`, whenever you add a new todo item to the DOM, simply call:
-   `MotionEffects.revealTodoList(allTodoElements);`
-3. **Experience**: The user will feel a "springy" response when opening modals and a fluid, staggered arrival of tasks, making the productivity tool feel lightweight and modern.
+.hotel-particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: float-particle 10s infinite ease-in-out;
+}
+
+@keyframes float-particle {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    33% { transform: translateY(-20px) translateX(10px); }
+    66% { transform: translateY(-10px) translateX(-10px); }
+}

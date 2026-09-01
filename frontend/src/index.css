@@ -87,3 +87,31 @@ body {
 .terminal-glow {
   text-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
 }
+
+/* Server Rack LED Animations */
+@keyframes led-blink-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+@keyframes led-blink-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes server-pulse {
+  0%, 100% { filter: drop-shadow(0 0 2px #06b6d4); opacity: 1; }
+  50% { filter: drop-shadow(0 0 7px #06b6d4); opacity: 0.8; }
+}
+
+.animate-led-fast {
+  animation: led-blink-fast 0.6s infinite ease-in-out;
+}
+
+.animate-led-slow {
+  animation: led-blink-slow 1.3s infinite ease-in-out;
+}
+
+.animate-server-pulse {
+  animation: server-pulse 2s infinite ease-in-out;
+}

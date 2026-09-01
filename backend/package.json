@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "axios": "^1.7.2",
@@ -16,5 +16,8 @@
     "mongodb": "^6.7.0",
     "uuid": "^10.0.0",
     "ws": "^8.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

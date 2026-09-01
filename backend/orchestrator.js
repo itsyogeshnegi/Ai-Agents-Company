@@ -184,7 +184,7 @@ class ProjectOrchestrator {
 
     const { thought: marcusThought, content: planOutput } = await llmClient.generateResponse(
       marcus.system_prompt,
-      `Client brief: "${userBrief}". Decompose into strategic plan and tasks for Sophia, Elena, Julian, Ethan, Leo, Vikram, Chloe, and Tasha.`
+      `Client brief: "${userBrief}". Decompose into strategic plan and tasks for Sophia, Elena, Julian, Ethan, Leo, Vikram, Chloe, Tasha, Dax, and Hannah.`
     );
 
     this.broadcast(projectId, "agent_thought", {
@@ -224,7 +224,7 @@ class ProjectOrchestrator {
 
     this.broadcast(projectId, "agent_speech", {
       agentId: "marcus",
-      text: "Team: Roadmap is approved. Sophia on Design Tokens, Elena on Motion, Ethan on Business Logic, Leo on Frontend. Let's ship it!"
+      text: "Team: Roadmap is approved. Sophia on Design, Elena on Motion, Ethan on Logic, Leo on Frontend, Dax on Cloud, Hannah on People Ops & Culture. Let's ship it!"
     });
 
     await new Promise(r => setTimeout(r, 5000));
@@ -237,7 +237,7 @@ class ProjectOrchestrator {
 
     await new Promise(r => setTimeout(r, 4500));
 
-    // 4. Execution Pipeline (Now with Elena & Ethan for maximum performance, logic & design!)
+    // 4. Execution Pipeline
     const pipeline = [
       {
         agentId: "sophia",
@@ -294,6 +294,20 @@ class ProjectOrchestrator {
         filename: "qa_audit_report.md",
         lang: "markdown",
         speech: "Auditing all code, testing responsiveness, and verifying security checks."
+      },
+      {
+        agentId: "dax",
+        taskTitle: "Docker, Cloud & Health Monitoring",
+        filename: "docker-compose.yml",
+        lang: "yaml",
+        speech: "Configuring Docker containerization, GPU health monitors, and cloud deployment pipelines."
+      },
+      {
+        agentId: "hannah",
+        taskTitle: "People Ops, Salary & Team Wellness Bulletin",
+        filename: "hr_company_bulletin.md",
+        lang: "markdown",
+        speech: "Distributing company updates, salary payroll dispatches, and office wellness perks."
       }
     ];
 
@@ -383,7 +397,7 @@ class ProjectOrchestrator {
     // 5. Marcus Wrap-Up & Notification with Live Links
     this.broadcast(projectId, "agent_speech", {
       agentId: "marcus",
-      text: "All milestones complete! Full project code and live preview packaged."
+      text: "All milestones complete! Full project code, infrastructure and live preview packaged."
     });
 
     this.broadcast(projectId, "chat_message", {
@@ -394,7 +408,7 @@ class ProjectOrchestrator {
       avatar: marcus.avatar,
       color: marcus.color,
       thought: "Verifying all deliverables are stored on disk and ready for CEO inspection.",
-      text: `🎉 **CEO: Project Delivered Successfully!**\n\nAll 8 project deliverables have been built by the team and saved to disk:\n- 🌐 **index.html** (Live Interactive Web App by Leo)\n- 🧠 **business-logic.js** (State Machines & Algorithms by Ethan)\n- ✨ **motion-effects.js** (Dynamic Animations by Elena)\n- 🎨 **design-tokens.css** (Design System by Sophia)\n- ⚙️ **api-service.js** (Backend REST API by Vikram)\n- ✍️ **copy-deck.md** (Brand Copy by Julian)\n- 📈 **seo-schema.html** (SEO Metadata by Chloe)\n- 🛡️ **qa_audit_report.md** (QA Certificate by Tasha)\n\n👉 **Click on the 'LIVE PREVIEW' tab above to test your interactive web application!**`,
+      text: `🎉 **CEO: Project Delivered Successfully!**\n\nAll 10 project deliverables have been built by the team and saved to disk:\n- 🌐 **index.html** (Live Interactive Web App by Leo)\n- 🧠 **business-logic.js** (State Machines & Algorithms by Ethan)\n- ✨ **motion-effects.js** (Dynamic Animations by Elena)\n- 🎨 **design-tokens.css** (Design System by Sophia)\n- ⚙️ **api-service.js** (Backend REST API by Vikram)\n- ✍️ **copy-deck.md** (Brand Copy by Julian)\n- 📈 **seo-schema.html** (SEO Metadata by Chloe)\n- 🛡️ **qa_audit_report.md** (QA Certificate by Tasha)\n- ☁️ **docker-compose.yml** (Cloud & DevOps Infrastructure by Dax)\n- ☕ **hr_company_bulletin.md** (People Ops & Salary Bulletin by Hannah)\n\n👉 **Click on the 'LIVE PREVIEW' tab above to test your interactive web application!**`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
 

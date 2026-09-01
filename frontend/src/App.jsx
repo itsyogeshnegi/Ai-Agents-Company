@@ -116,6 +116,26 @@ const INITIAL_AGENTS = [
     color: "#ef4444",
     status: "idle",
     activity: "Standby"
+  },
+  {
+    id: "dax",
+    name: "Dax Mercer",
+    role: "Lead DevOps & Cloud Engineer",
+    title: "Site Reliability & Cloud Infrastructure Architect",
+    avatar: "☁️",
+    color: "#06b6d4",
+    status: "idle",
+    activity: "Standby"
+  },
+  {
+    id: "hannah",
+    name: "Hannah Brooks",
+    role: "Head of People Operations & HR",
+    title: "Chief People Officer & Employee Experience Lead",
+    avatar: "☕",
+    color: "#f43f5e",
+    status: "idle",
+    activity: "Standby"
   }
 ];
 

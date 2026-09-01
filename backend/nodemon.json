@@ -1,0 +1,10 @@
+{
+  "watch": ["server.js", "agents.js", "orchestrator.js", "llmClient.js", "database.js"],
+  "ext": "js,json",
+  "ignore": [
+    "generated_projects/**",
+    "node_modules/**",
+    "*.log"
+  ],
+  "delay": "500"
+}

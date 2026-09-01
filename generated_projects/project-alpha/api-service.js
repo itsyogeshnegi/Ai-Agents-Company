@@ -3,146 +3,191 @@ const mongoose = require('mongoose');
 const router = express.Router();
 
 /**
+ * =============================================================================
  * DATABASE SCHEMAS
+ * =============================================================================
  */
 
-// User Schema for authentication and ownership
+// Room Schema
+const RoomSchema = new mongoose.Schema({
+    roomNumber: { type: String, required: true, unique: true },
+    type: { type: String, enum: ['Single', 'Double', 'Suite', 'Deluxe'], required: true },
+    pricePerNight: { type: Number, required: true },
+    capacity: { type: Number, required: true },
+    amenities: [{ type: String }],
+    status: { type: String, enum: ['Available', 'Booked', 'Maintenance'], default: 'Available' },
+    description: String,
+    images: [String]
+}, { timestamps: true });
+
+// User/Guest Schema
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true }, // In production, use bcrypt to hash
+    phone: String,
+    role: { type: String, enum: ['guest', 'admin'], default: 'guest' }
+}, { timestamps: true });
 
-// Todo Schema
-const TodoSchema = new mongoose.Schema({
+// Booking Schema
+const BookingSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    title: { type: String, required: true, trim: true },
-    description: { type: String, default: '' },
-    isCompleted: { type: Boolean, default: false },
-    priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
-    dueDate: { type: Date },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
+    checkInDate: { type: Date, required: true },
+    checkOutDate: { type: Date, required: true },
+    totalPrice: { type: Number, required: true },
+    paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Cancelled'], default: 'Pending' },
+    specialRequests: String
+}, { timestamps: true });
 
+// Review Schema
+const ReviewSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
+    rating: { type: Number, min: 1, max: 5, required: true },
+    comment: String
+}, { timestamps: true });
+
+const Room = mongoose.model('Room', RoomSchema);
 const User = mongoose.model('User', UserSchema);
-const Todo = mongoose.model('Todo', TodoSchema);
+const Booking = mongoose.model('Booking', BookingSchema);
+const Review = mongoose.model('Review', ReviewSchema);
 
 /**
- * MIDDLEWARE: Error Handler & Validation
+ * =============================================================================
+ * MIDDLEWARE
+ * =============================================================================
  */
-const validateTodo = (req, res, next) => {
-    const { title } = req.body;
-    if (!title || title.trim() === '') {
-        return res.status(400).json({ error: 'Title is required and cannot be empty.' });
-    }
-    next();
+
+// Error Handling Wrapper
+const asyncHandler = (fn) => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
 };
 
 /**
- * AUTH ENDPOINTS (Simplified for Project Brief)
+ * =============================================================================
+ * API ENDPOINTS
+ * =============================================================================
  */
-router.post('/auth/register', async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const user = new User({ username, email, password });
-        await user.save();
-        res.status(201).json({ message: 'User created successfully', userId: user._id });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
+
+// --- ROOMS ENDPOINTS ---
+
+// Get all available rooms with filters
+router.get('/rooms', asyncHandler(async (req, res) => {
+    const { type, minPrice, maxPrice } = req.query;
+    let query = { status: 'Available' };
+
+    if (type) query.type = type;
+    if (minPrice || maxPrice) {
+        query.pricePerNight = {};
+        if (minPrice) query.pricePerNight.$gte = Number(minPrice);
+        if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
     }
-});
+
+    const rooms = await Room.find(query);
+    res.json({ success: true, data: rooms });
+}));
+
+// Get specific room details
+router.get('/rooms/:id', asyncHandler(async (req, res) => {
+    const room = await Room.findById(req.params.id);
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+    res.json({ success: true, data: room });
+}));
+
+// Create room (Admin Only)
+router.post('/rooms', asyncHandler(async (req, res) => {
+    const room = await Room.create(req.body);
+    res.status(201).json({ success: true, data: room });
+}));
+
+// Update room status or details (Admin Only)
+router.put('/rooms/:id', asyncHandler(async (req, res) => {
+    const room = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true, data: room });
+}));
+
+// --- USER ENDPOINTS ---
+
+// Register user
+router.post('/auth/register', asyncHandler(async (req, res) => {
+    const user = await User.create(req.body);
+    res.status(201).json({ success: true, data: { userId: user._id, email: user.email } });
+}));
+
+// --- BOOKING ENDPOINTS ---
+
+// Create a new booking
+router.post('/bookings', asyncHandler(async (req, res) => {
+    const { userId, roomId, checkInDate, checkOutDate } = req.body;
+
+    // Check if room is available for these dates
+    const existingBooking = await Booking.findOne({
+        roomId,
+        $or: [
+            { checkInDate: { $lte: checkOutDate }, checkOutDate: { $gte: checkInDate } }
+        ]
+    });
+
+    if (existingBooking) {
+        return res.status(400).json({ success: false, message: 'Room is already booked for these dates' });
+    }
+
+    // Calculate Price (simplified logic)
+    const room = await Room.findById(roomId);
+    const days = (new Date(checkOutDate) - new Date(checkInDate)) / (1000 * 60 * 60 * 24);
+    const totalPrice = days * room.pricePerNight;
+
+    const booking = await Booking.create({ ...req.body, totalPrice });
+    
+    // Mark room as booked (simplified)
+    await Room.findByIdAndUpdate(roomId, { status: 'Booked' });
+
+    res.status(201).json({ success: true, data: booking });
+}));
+
+// Get user's bookings
+router.get('/bookings/user/:userId', asyncHandler(async (req, res) => {
+    const bookings = await Booking.find({ userId: req.params.userId }).populate('roomId');
+    res.json({ success: true, data: bookings });
+}));
+
+// Cancel booking
+router.delete('/bookings/:id', asyncHandler(async (req, res) => {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+
+    await Room.findByIdAndUpdate(booking.roomId, { status: 'Available' });
+    await Booking.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: 'Booking cancelled successfully' });
+}));
+
+// --- REVIEW ENDPOINTS ---
+
+// Submit a room review
+router.post('/reviews', asyncHandler(async (req, res) => {
+    const review = await Review.create(req.body);
+    res.status(201).json({ success: true, data: review });
+}));
+
+// Get reviews for a specific room
+router.get('/reviews/room/:roomId', asyncHandler(async (req, res) => {
+    const reviews = await Review.find({ roomId: req.params.roomId }).populate('userId', 'fullName');
+    res.json({ success: true, data: reviews });
+}));
 
 /**
- * TODO CRUD ENDPOINTS
+ * =============================================================================
+ * GLOBAL ERROR HANDLER
+ * =============================================================================
  */
-
-// GET /api/todos - Fetch all todos for a specific user
-router.get('/todos', async (req, res) => {
-    try {
-        const { userId } = req.query;
-        if (!userId) return res.status(400).json({ error: 'userId query parameter is required' });
-
-        const todos = await Todo.find({ userId }).sort({ createdAt: -1 });
-        res.json(todos);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error retrieving todos' });
-    }
+router.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        success: false,
+        error: err.message || 'Internal Server Error'
+    });
 });
-
-// POST /api/todos - Create a new todo
-router.post('/todos', validateTodo, async (req, res) => {
-    try {
-        const { userId, title, description, priority, dueDate } = req.body;
-        if (!userId) return res.status(400).json({ error: 'userId is required' });
-
-        const todo = new Todo({
-            userId,
-            title,
-            description,
-            priority,
-            dueDate
-        });
-
-        await todo.save();
-        res.status(201).json(todo);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error creating todo' });
-    }
-});
-
-// PUT /api/todos/:id - Update todo status or details
-router.put('/todos/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updates = req.body;
-        
-        updates.updatedAt = Date.now();
-
-        const updatedTodo = await Todo.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
-        
-        if (!updatedTodo) return res.status(404).json({ error: 'Todo not found' });
-        
-        res.json(updatedTodo);
-    } catch (err) {
-        res.status(400).json({ error: 'Update failed: ' + err.message });
-    }
-});
-
-// DELETE /api/todos/:id - Remove a todo
-router.delete('/todos/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedTodo = await Todo.findByIdAndDelete(id);
-        
-        if (!deletedTodo) return res.status(404).json({ error: 'Todo not found' });
-        
-        res.json({ message: 'Todo successfully deleted' });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error deleting todo' });
-    }
-});
-
-/**
- * SERVER INITIALIZATION (Boilerplate for execution)
- */
-if (require.main === module) {
-    const app = express();
-    app.use(express.json());
-
-    // API Route Integration
-    app.use('/api', router);
-
-    const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/todo_db';
-    const PORT = process.env.PORT || 3000;
-
-    mongoose.connect(MONGO_URI)
-        .then(() => {
-            console.log('Connected to MongoDB successfully.');
-            app.listen(PORT, () => console.log(`Vikram Rao's API Service running on port ${PORT}`));
-        })
-        .catch(err => console.error('MongoDB connection error:', err));
-}
 
 module.exports = router;

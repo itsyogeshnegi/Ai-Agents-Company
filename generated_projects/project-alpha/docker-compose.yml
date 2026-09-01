@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+  # --- Frontend: Hotel Guest Portal ---
+  frontend:
+    image: hotel-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://backend:5000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - hotel-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # --- Backend: Hotel Management API ---
+  backend:
+    image: hotel-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb0:27017,mongodb1:27017,mongodb2:27017/hotel_db?replicaSet=rs0
+      - OLLAMA_HOST=http://ollama:11434
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      mongodb0:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - hotel-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+
+  # --- Database: MongoDB Replica Set (Production Cluster) ---
+  mongodb0:
+    image: mongo:6.0
+    command: mongod --replSet rs0 --bind_ip_all
+    volumes:
+      - mongodb0_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017 --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hotel-network
+
+  mongodb1:
+    image: mongo:6.0
+    command: mongod --replSet rs0 --bind_ip_all
+    volumes:
+      - mongodb1_data:/data/db
+    networks:
+      - hotel-network
+
+  mongodb2:
+    image: mongo:6.0
+    command: mongod --replSet rs0 --bind_ip_all
+    volumes:
+      - mongodb2_data:/data/db
+    networks:
+      - hotel-network
+
+  # --- AI Engine: Ollama (Hotel AI Concierge) ---
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - hotel-network
+    restart: unless-stopped
+
+  # --- Monitoring: Prometheus & Grafana ---
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - hotel-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    depends_on:
+      - prometheus
+    networks:
+      - hotel-network
+
+  # --- CI/CD: Runner / Watchtower (Auto-update) ---
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 3600 --cleanup
+    networks:
+      - hotel-network
+
+networks:
+  hotel-network:
+    driver: bridge
+
+volumes:
+  mongodb0_data:
+  mongodb1_data:
+  mongodb2_data:
+  ollama_data:

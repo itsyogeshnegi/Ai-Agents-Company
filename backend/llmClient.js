@@ -309,6 +309,138 @@ export default router;`;
 **QA Sign-off**: Verified ready for production deployment.`;
     }
 
+    if (sys.includes("dax") || sys.includes("devops") || sys.includes("cloud")) {
+      return `<thought>Architecting production Docker compose setup, Ollama GPU pass-through, MongoDB clusters, and automated health checks.</thought>
+# ☁️ Docker & Cloud Infrastructure Orchestration by Dax Mercer
+version: '3.8'
+
+services:
+  # 🚀 Frontend React / Static Client
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agency_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - agency_network
+
+  # ⚙️ Node.js Express REST & WebSocket API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agency_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MONGO_URI=mongodb://mongo:27017
+      - DB_NAME=ai_agency_db
+      - OLLAMA_HOST=http://ollama_engine:11434
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - agency_network
+
+  # 🗄️ MongoDB Database with Persistent Volume
+  mongo:
+    image: mongo:7.0
+    container_name: agency_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agency_network
+
+  # 🧠 Ollama Local AI LLM Cluster
+  ollama_engine:
+    image: ollama/ollama:latest
+    container_name: agency_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - agency_network
+
+volumes:
+  mongo_data:
+    driver: local
+  ollama_models:
+    driver: local
+
+networks:
+  agency_network:
+    driver: bridge`;
+    }
+
+    if (sys.includes("hannah") || sys.includes("hr") || sys.includes("people") || sys.includes("bulletin")) {
+      return `<thought>Composing comprehensive company bulletin, employee wellness initiatives, coffee break schedule, salary payroll distribution, and executive alignment memo.</thought>
+# ☕ Internal Company Bulletin & People Operations Report
+**Prepared by:** Hannah Brooks, Head of People Operations & Employee Experience  
+**Date:** ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}  
+**Distribution:** All Agency Staff & Executive Leadership  
+
+---
+
+## 🌟 1. Executive Summary & Team Morale Status
+- **Overall Agency Morale Index:** 98.4% (Thriving & Collaborative)
+- **Workstation Wellness Checks:** Completed across all 11 engineering & design desks.
+- **Coffee & Refreshment Bar:** Fresh specialty roast espresso and matcha tea station stocked.
+- **Mental Health & Focus Support:** 100% blocker-free; sprint bandwidth balanced in coordination with Director Marcus Steele.
+
+---
+
+## 💰 2. Payroll, Compensation & Bonus Distribution
+All engineering, design, and growth stipends for the current delivery cycle have been audited and queued for direct wire transfer.
+
+| Team Member | Role | Payroll Status | Performance Bonus |
+| :--- | :--- | :---: | :---: |
+| 👔 **Marcus Steele** | Senior Project Manager | ✅ Processed | +15% On-Time Delivery |
+| 🎨 **Sophia Chen** | Lead UI/UX Designer | ✅ Processed | +12% Design Token Excellence |
+| ✨ **Elena Rostova** | Creative Motion Designer | ✅ Processed | +10% 60fps Micro-Interactions |
+| 💻 **Leo Tanaka** | Senior Frontend Developer | ✅ Processed | +15% Clean HTML5 Execution |
+| 🧠 **Ethan Vance** | Principal Logic Architect | ✅ Processed | +12% Zero-Defect FSM Engine |
+| ⚙️ **Vikram Rao** | Lead Backend Developer | ✅ Processed | +12% Sub-10ms API Latency |
+| 📱 **Maya Patel** | Mobile App Developer | ✅ Processed | +10% Responsive Touch Layouts |
+| 📈 **Chloe Bennett** | SEO & Growth Specialist | ✅ Processed | +10% 100/100 Lighthouse SEO |
+| ✍️ **Julian Thorne** | Lead Content Writer | ✅ Processed | +10% High-CTR Copy Deck |
+| 🛡️ **Tasha Ward** | QA & Security Reviewer | ✅ Processed | +12% Zero-Vulnerability Sign-off |
+| ☁️ **Dax Mercer** | Lead DevOps Engineer | ✅ Processed | +15% 99.99% Server Uptime |
+
+---
+
+## 🌿 3. Mental Health, Wellness & Office Upgrades
+1. **Hydration & Ergonomics:** New anti-fatigue desk mats and dual-monitor riser adjustments installed.
+2. **Weekly Recharge Friday:** 3:00 PM social mixer & team retrospective.
+3. **Open Door Policy:** Hannah is available at Desk 11 for 1-on-1 chats, wellness requests, or workplace feedback.`;
+    }
+
     return `<thought>Processing direct task input...</thought>\nGenerated output for task: ${userPrompt}. Completed successfully.`;
   }
 }

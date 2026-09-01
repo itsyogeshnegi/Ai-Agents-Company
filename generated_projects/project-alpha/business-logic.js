@@ -1,161 +1,183 @@
 /**
  * business-logic.js
- * Core Domain Business Logic & State Machine Engine
+ * Core Domain Logic & State Machine Engine for Hotel Management System
  * Architect: Ethan Vance, Principal Logic & Systems Architect
  */
 
-"use strict";
+const HotelBusinessEngine = (() => {
+    'use strict';
 
-/**
- * STATE MACHINE CONFIGURATION
- * Defines the valid lifecycles of a Todo entity.
- * Prevents illegal transitions (e.g., an Archived task cannot move directly to InProgress).
- */
-const TodoState = {
-    PENDING: 'PENDING',
-    IN_PROGRESS: 'IN_PROGRESS',
-    COMPLETED: 'COMPLETED',
-    ARCHIVED: 'ARCHIVED',
-};
+    // --- Constants & Configurations ---
+    const ROOM_TYPES = {
+        SINGLE: { basePrice: 100, capacity: 1 },
+        DOUBLE: { basePrice: 150, capacity: 2 },
+        SUITE: { basePrice: 300, capacity: 4 },
+    };
 
-const StateTransitions = {
-    [TodoState.PENDING]: [TodoState.IN_PROGRESS, TodoState.ARCHIVED],
-    [TodoState.IN_PROGRESS]: [TodoState.COMPLETED, TodoState.PENDING, TodoState.ARCHIVED],
-    [TodoState.COMPLETED]: [TodoState.PENDING, TodoState.ARCHIVED],
-    [TodoState.ARCHIVED]: [TodoState.PENDING], // Recovery path
-};
+    const BOOKING_STATES = {
+        PENDING: 'PENDING',
+        CONFIRMED: 'CONFIRMED',
+        CHECKED_IN: 'CHECKED_IN',
+        CHECKED_OUT: 'CHECKED_OUT',
+        CANCELLED: 'CANCELLED',
+    };
 
-/**
- * DOMAIN MODELS
- */
-class TodoItem {
-    constructor({ id, title, description = '', priority = 1, dueDate = null }) {
-        this.validate(title, priority);
-        
-        this.id = id || crypto.randomUUID();
-        this.title = title;
-        this.description = description;
-        this.priority = priority; // 1 (Low) to 5 (Critical)
-        this.dueDate = dueDate ? new Date(dueDate) : null;
-        this.state = TodoState.PENDING;
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
-    }
+    // Valid State Transitions
+    const STATE_TRANSITIONS = {
+        [BOOKING_STATES.PENDING]: [BOOKING_STATES.CONFIRMED, BOOKING_STATES.CANCELLED],
+        [BOOKING_STATES.CONFIRMED]: [BOOKING_STATES.CHECKED_IN, BOOKING_STATES.CANCELLED],
+        [BOOKING_STATES.CHECKED_IN]: [BOOKING_STATES.CHECKED_OUT],
+        [BOOKING_STATES.CHECKED_OUT]: [],
+        [BOOKING_STATES.CANCELLED]: [],
+    };
 
-    validate(title, priority) {
-        if (!title || typeof title !== 'string' || title.trim().length < 3) {
-            throw new Error("DomainValidationError: Title must be a string of at least 3 characters.");
+    // --- Validation Utilities ---
+    const Validator = {
+        isValidDateRange: (start, end) => {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            return startDate < endDate && startDate >= new Date('2000-01-01');
+        },
+        isWithinCapacity: (roomType, guestCount) => {
+            return guestCount <= ROOM_TYPES[roomType].capacity;
+        },
+        isValidPayment: (paymentDetails) => {
+            // Mock validation logic for payment tokens
+            return paymentDetails && paymentDetails.token && paymentDetails.amount > 0;
         }
-        if (!Number.isInteger(priority) || priority < 1 || priority > 5) {
-            throw new Error("DomainValidationError: Priority must be an integer between 1 and 5.");
+    };
+
+    // --- Pricing Engine ---
+    const PricingEngine = {
+        /**
+         * Calculates total stay cost using a dynamic multiplier based on occupancy and season.
+         * Formula: (BaseRate * Days * SeasonalMultiplier) + Taxes
+         */
+        calculateStayCost: (roomType, startDate, endDate, options = {}) => {
+            const { occupancyRate = 0.5, isPeakSeason = false } = options;
+            
+            const basePrice = ROOM_TYPES[roomType].basePrice;
+            const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+            
+            // Algorithmic Surge Pricing: 
+            // Increase price by 20% if occupancy > 80%, or 50% if Peak Season
+            let multiplier = 1.0;
+            if (isPeakSeason) multiplier += 0.5;
+            if (occupancyRate > 0.8) multiplier += 0.2;
+
+            const subtotal = basePrice * days * multiplier;
+            const taxRate = 0.12; // 12% VAT
+            
+            return {
+                subtotal: parseFloat(subtotal.toFixed(2)),
+                tax: parseFloat((subtotal * taxRate).toFixed(2)),
+                total: parseFloat((subtotal * (1 + taxRate)).toFixed(2)),
+                days
+            };
         }
-    }
+    };
 
-    updateTimestamp() {
-        this.updatedAt = new Date();
-    }
-}
-
-/**
- * CORE ENGINE
- * Handles state orchestration, filtering, and optimization algorithms.
- */
-class TodoEngine {
-    constructor() {
-        this.store = new Map();
-    }
-
-    /**
-     * Transactional Creation
-     */
-    createTodo(payload) {
-        try {
-            const item = new TodoItem(payload);
-            this.store.set(item.id, item);
-            return item;
-        } catch (e) {
-            return { error: e.message };
-        }
-    }
-
-    /**
-     * State Machine Transition Logic
-     * Ensures the entity moves through the lifecycle according to business rules.
-     */
-    transitionState(id, newState) {
-        const item = this.store.get(id);
-        if (!item) throw new Error("EntityNotFoundError: Todo item not found.");
-
-        const allowedTransitions = StateTransitions[item.state];
-        
-        if (!allowedTransitions.includes(newState)) {
-            throw new Error(`IllegalStateTransition: Cannot move from ${item.state} to ${newState}`);
+    // --- State Machine Engine ---
+    class BookingStateMachine {
+        constructor(bookingId, initialState = BOOKING_STATES.PENDING) {
+            this.bookingId = bookingId;
+            this.currentState = initialState;
+            this.history = [{ state: initialState, timestamp: new Date() }];
         }
 
-        item.state = newState;
-        item.updateTimestamp();
-        return item;
-    }
-
-    /**
-     * Optimization Algorithm: Weighted Priority Sorting
-     * Ranks tasks based on a combination of Priority (Weight: 0.7) 
-     * and Urgency/Due Date (Weight: 0.3).
-     */
-    getOptimizedQueue() {
-        const now = new Date().getTime();
-        const items = Array.from(this.store.values())
-            .filter(item => item.state !== TodoState.ARCHIVED && item.state !== TodoState.COMPLETED);
-
-        return items.sort((a, b) => {
-            // Priority Score (Normalized 1-5)
-            const priorityA = a.priority * 0.7;
-            const priorityB = b.priority * 0.7;
-
-            // Urgency Score (Inverse of time remaining)
-            let urgencyA = 0;
-            let urgencyB = 0;
-
-            if (a.dueDate) {
-                const diffA = a.dueDate.getTime() - now;
-                urgencyA = diffA < 0 ? 1 : 1 / (diffA / (1000 * 60 * 60 * 24) + 1);
+        transition(newState) {
+            const allowedTransitions = STATE_TRANSITIONS[this.currentState];
+            
+            if (allowedTransitions.includes(newState)) {
+                this.currentState = newState;
+                this.history.push({ state: newState, timestamp: new Date() });
+                return { success: true, state: this.currentState };
             }
-            if (b.dueDate) {
-                const diffB = b.dueDate.getTime() - now;
-                urgencyB = diffB < 0 ? 1 : 1 / (diffB / (1000 * 60 * 60 * 24) + 1);
+            
+            throw new Error(`Invalid state transition from ${this.currentState} to ${newState}`);
+        }
+
+        getState() {
+            return this.currentState;
+        }
+    }
+
+    // --- Transaction Workflow Orchestrator ---
+    const WorkflowManager = {
+        /**
+         * Orchestrates the process of creating a reservation
+         */
+        processReservation: async (reservationData) => {
+            const { roomType, startDate, endDate, guests, payment } = reservationData;
+
+            // 1. Validation Phase
+            if (!Validator.isValidDateRange(startDate, endDate)) {
+                throw new Error("Invalid date range provided.");
+            }
+            if (!Validator.isWithinCapacity(roomType, guests)) {
+                throw new Error(`Room type ${roomType} cannot accommodate ${guests} guests.`);
             }
 
-            const scoreA = priorityA + (urgencyA * 0.3);
-            const scoreB = priorityB + (urgencyB * 0.3);
+            // 2. Pricing Phase
+            const pricing = PricingEngine.calculateStayCost(roomType, startDate, endDate);
 
-            return scoreB - scoreA; // Descending
+            // 3. Payment Verification
+            if (!Validator.isValidPayment({ ...payment, amount: pricing.total })) {
+                throw new Error("Payment verification failed.");
+            }
+
+            // 4. State Initialization
+            const bookingId = `BK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+            const sm = new BookingStateMachine(bookingId);
+
+            // Transition to Confirmed upon successful payment
+            sm.transition(BOOKING_STATES.CONFIRMED);
+
+            return {
+                bookingId,
+                status: sm.getState(),
+                pricing,
+                confirmation: `Reservation ${bookingId} confirmed for ${pricing.days} nights.`
+            };
+        }
+    };
+
+    // Public API
+    return {
+        Validator,
+        PricingEngine,
+        BookingStateMachine,
+        WorkflowManager,
+        ROOM_TYPES,
+        BOOKING_STATES
+    };
+})();
+
+// --- Example Usage / Integration Test ---
+(async () => {
+    try {
+        console.log("--- Initializing Hotel Booking Workflow ---");
+        
+        const myBooking = await HotelBusinessEngine.WorkflowManager.processReservation({
+            roomType: 'SUITE',
+            startDate: '2023-12-01',
+            endDate: '2023-12-05',
+            guests: 3,
+            payment: { token: 'tok_visa_123', amount: 1200 }
         });
-    }
 
-    /**
-     * Data Retrieval & Projection
-     */
-    getTasksByState(state) {
-        return Array.from(this.store.values()).filter(t => t.state === state);
-    }
+        console.log("Reservation Success:", myBooking);
 
-    deleteTodo(id) {
-        if (!this.store.has(id)) return false;
-        this.store.delete(id);
-        return true;
-    }
+        // Simulate Guest Lifecycle
+        const lifecycle = new HotelBusinessEngine.BookingStateMachine(myBooking.bookingId, myBooking.status);
+        
+        console.log("Current State:", lifecycle.getState()); // CONFIRMED
+        lifecycle.transition(HotelBusinessEngine.BOOKING_STATES.CHECKED_IN);
+        console.log("New State:", lifecycle.getState()); // CHECKED_IN
+        lifecycle.transition(HotelBusinessEngine.BOOKING_STATES.CHECKED_OUT);
+        console.log("Final State:", lifecycle.getState()); // CHECKED_OUT
 
-    /**
-     * Bulk update for productivity analytics
-     */
-    getCompletionRate() {
-        const all = Array.from(this.store.values());
-        if (all.length === 0) return 0;
-        const completed = all.filter(t => t.state === TodoState.COMPLETED).length;
-        return (completed / all.length) * 100;
+    } catch (error) {
+        console.error("Business Logic Error:", error.message);
     }
-}
-
-// Export as a singleton for system-wide state consistency
-export const Engine = new TodoEngine();
-export { TodoState };
+})();
