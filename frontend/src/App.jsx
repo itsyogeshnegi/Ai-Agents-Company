@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import OfficeMap from './components/OfficeMap';
 import AgentInspector from './components/AgentInspector';
 import AgentDock from './components/AgentDock';
+import AgentSidebar from './components/AgentSidebar';
 import SettingsModal from './components/SettingsModal';
 import { 
   Building2, 
@@ -379,7 +380,7 @@ export default function App() {
       <main className="flex-1 flex gap-2 p-1.5 overflow-hidden min-h-0">
         {/* Left/Center: 2D Pixel Art Office Map */}
         {(viewLayout === 'split' || viewLayout === 'map_only') && (
-          <div className={`${viewLayout === 'split' ? 'flex-1' : 'w-full'} h-full min-w-0 flex flex-col`}>
+          <div className="flex-1 h-full min-w-0 flex flex-col">
             <OfficeMap
               agents={agents}
               selectedAgentId={selectedAgentId}
@@ -390,7 +391,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Right: Agent Inspector & Live Control Panel */}
+        {/* Right (In Map Only Mode): Vertical Agent Directory Sidebar */}
+        {viewLayout === 'map_only' && (
+          <AgentSidebar
+            agents={agents}
+            selectedAgentId={selectedAgentId}
+            onSelectAgent={setSelectedAgentId}
+            onAddAgent={() => setIsSettingsOpen(true)}
+          />
+        )}
+
+        {/* Right (In Split or Terminal Mode): Agent Inspector & Live Control Panel */}
         {(viewLayout === 'split' || viewLayout === 'inspector_only') && (
           <div className={`${viewLayout === 'split' ? 'w-[440px] lg:w-[490px] xl:w-[540px]' : 'w-full'} h-full flex-shrink-0 flex flex-col`}>
             <AgentInspector
@@ -407,15 +418,17 @@ export default function App() {
         )}
       </main>
 
-      {/* 3. BOTTOM AGENT DOCK */}
-      <footer className="flex-shrink-0">
-        <AgentDock
-          agents={agents}
-          selectedAgentId={selectedAgentId}
-          onSelectAgent={setSelectedAgentId}
-          onAddAgent={() => alert("Custom agent creation: Configure title, personality & skills in settings.")}
-        />
-      </footer>
+      {/* 3. BOTTOM AGENT DOCK (Visible in Split Mode) */}
+      {viewLayout === 'split' && (
+        <footer className="flex-shrink-0">
+          <AgentDock
+            agents={agents}
+            selectedAgentId={selectedAgentId}
+            onSelectAgent={setSelectedAgentId}
+            onAddAgent={() => setIsSettingsOpen(true)}
+          />
+        </footer>
+      )}
 
       {/* Settings Modal */}
       <SettingsModal

@@ -295,7 +295,7 @@ export default function OfficeMap({
       if (meetingMode) return;
 
       const hannahDesk = FIXED_DESK_SEATS.hannah || { x: 524, y: 500 };
-      const coffeeBar = { x: 830, y: 510 };
+      const coffeeBar = { x: 765, y: 338 };
       const bossOfficeDoor = { x: 92, y: 140 };
       const centralFloor = { x: 290, y: 390 };
 
@@ -720,40 +720,198 @@ export default function OfficeMap({
         </g>
 
         {/* ========================================================================= */}
-        {/* ROOM 5: ☕ KITCHEN, BREAKROOM & COPIER (Bottom Right) */}
+        {/* ROOM 5: ☕ ARTISAN CAFE & DINING LOUNGE (Bottom Right Quadrant) */}
         {/* ========================================================================= */}
-        <rect x="675" y="275" width="270" height="12" fill="#ffffff" stroke="#94a3b8" strokeWidth="2" />
-        <rect x="675" y="275" width="12" height="190" fill="#ffffff" stroke="#94a3b8" strokeWidth="2" />
+        <g filter="url(#softShadow)">
+          {/* Cafe Terrazzo / Oak Floor Rug */}
+          <rect x="685" y="260" width="255" height="315" rx="6" fill="#fdfbf7" stroke="#e2d6c5" strokeWidth="2.5" />
 
-        <g transform="translate(850, 275)" filter="url(#softShadow)">
-          <rect x="0" y="0" width="75" height="54" fill="#86efac" stroke="#15803d" strokeWidth="2.5" rx="3" />
-          <rect x="8" y="8" width="58" height="26" fill="#14532d" rx="2" />
-          <rect x="68" y="16" width="16" height="28" fill="#cbd5e1" stroke="#64748b" strokeWidth="1.5" />
-        </g>
+          {/* Top Cafe Header Marquee */}
+          <rect x="695" y="265" width="235" height="15" fill="#1c1917" rx="3" />
+          <text x="812" y="275.5" fill="#f59e0b" fontSize="6.5" fontWeight="bold" textAnchor="middle" fontFamily="monospace" letterSpacing="0.5">
+            ☕ ARTISAN CAFE & DINING LOUNGE
+          </text>
 
-        <g transform="translate(735, 420)" filter="url(#softShadow)">
-          <rect x="0" y="0" width="85" height="34" fill="#f8fafc" stroke="#64748b" strokeWidth="2" rx="2" />
-          <rect x="8" y="6" width="18" height="22" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
-          <circle cx="17" cy="17" r="3" fill="#ef4444" />
-          <rect x="42" y="8" width="28" height="18" fill="#94a3b8" stroke="#475569" strokeWidth="1.5" rx="2" />
-        </g>
+          {/* ----------------------------------------------------------------------- */}
+          {/* 1. ESPRESSO COFFEE BAR & SMART BEVERAGE HUB */}
+          {/* ----------------------------------------------------------------------- */}
+          {/* Espresso Bar Counter */}
+          <g transform="translate(698, 286)">
+            {/* Marble Counter Base */}
+            <rect x="0" y="0" width="130" height="42" fill="#e7e5e4" stroke="#78716c" strokeWidth="1.8" rx="2" />
+            <rect x="2" y="2" width="126" height="38" fill="#d6d3d1" rx="1" />
+            
+            {/* 2-Group Espresso Machine */}
+            <rect x="6" y="5" width="30" height="24" fill="#0f172a" stroke="#334155" strokeWidth="1.2" rx="1" />
+            <rect x="8" y="7" width="26" height="8" fill="#1e293b" />
+            <circle cx="13" cy="11" r="2" fill="#ef4444" />
+            <circle cx="19" cy="11" r="2" fill="#22c55e" />
+            <circle cx="25" cy="11" r="2" fill="#38bdf8" />
+            {/* Portafilters & Steam Wand */}
+            <line x1="14" y1="15" x2="14" y2="24" stroke="#94a3b8" strokeWidth="1.5" />
+            <line x1="22" y1="15" x2="22" y2="24" stroke="#94a3b8" strokeWidth="1.5" />
+            <circle cx="14" cy="25" r="2" fill="#ffffff" stroke="#78350f" strokeWidth="0.8" />
+            <circle cx="22" cy="25" r="2" fill="#ffffff" stroke="#78350f" strokeWidth="0.8" />
 
-        <g transform="translate(825, 415)" filter="url(#softShadow)">
-          <rect x="0" y="0" width="28" height="42" fill="#cbd5e1" stroke="#64748b" strokeWidth="2" />
-          <line x1="0" y1="18" x2="28" y2="18" stroke="#64748b" strokeWidth="1.5" />
+            {/* Coffee Bean Grinder */}
+            <rect x="40" y="7" width="12" height="20" fill="#1c1917" stroke="#44403c" strokeWidth="1" rx="1" />
+            <circle cx="46" cy="11" r="4.5" fill="#78350f" stroke="#451a03" strokeWidth="1" />
+
+            {/* Glass Pastry Display Case with Croissants */}
+            <rect x="58" y="5" width="34" height="24" fill="#f0fdf4" stroke="#16a34a" strokeWidth="1" rx="1" opacity="0.9" />
+            <rect x="61" y="9" width="8" height="6" fill="#d97706" rx="2" />
+            <rect x="71" y="9" width="8" height="6" fill="#b45309" rx="2" />
+            <rect x="81" y="9" width="8" height="6" fill="#ec4899" rx="3" />
+            <rect x="66" y="19" width="18" height="5" fill="#ca8a04" rx="1" />
+
+            {/* Bar Sink with Chrome Faucet */}
+            <rect x="98" y="7" width="18" height="18" fill="#cbd5e1" stroke="#64748b" strokeWidth="1.2" rx="1" />
+            <rect x="101" y="10" width="12" height="12" fill="#94a3b8" rx="1" />
+            <path d="M 107 7 L 107 4 L 110 4 L 110 8" fill="none" stroke="#475569" strokeWidth="1.5" />
+
+            {/* Bar Counter Front Wood Slats */}
+            <rect x="4" y="32" width="122" height="6" fill="#78350f" rx="1" />
+          </g>
+
+          {/* Smart Glass-Door Cold Beverage Cooler */}
+          <g transform="translate(838, 286)">
+            <rect x="0" y="0" width="92" height="42" fill="#0f172a" stroke="#047857" strokeWidth="1.8" rx="2" />
+            <rect x="3" y="3" width="86" height="36" fill="#022c22" rx="1" />
+            
+            {/* 3 Drink Shelves */}
+            {[7, 18, 29].map((sy, sIdx) => (
+              <g key={`drink-shelf-${sIdx}`}>
+                <line x1="5" y1={sy + 7} x2="87" y2={sy + 7} stroke="#065f46" strokeWidth="1" />
+                {/* Cold Cans & Bottles */}
+                {[9, 19, 29, 39, 49, 59, 69, 77].map((bx, bIdx) => (
+                  <rect
+                    key={`can-${sIdx}-${bIdx}`}
+                    x={bx}
+                    y={sy}
+                    width="5.5"
+                    height="6.5"
+                    rx="1"
+                    fill={bIdx % 4 === 0 ? "#ef4444" : (bIdx % 4 === 1 ? "#38bdf8" : (bIdx % 4 === 2 ? "#10b981" : "#f59e0b"))}
+                  />
+                ))}
+              </g>
+            ))}
+            <text x="46" y="37" fill="#34d399" fontSize="4.5" fontWeight="bold" textAnchor="middle" fontFamily="monospace">
+              4°C 🧊 COLD BEVERAGES
+            </text>
+          </g>
+
+          {/* ----------------------------------------------------------------------- */}
+          {/* 2. DINING SECTION: TABLES & SEATING */}
+          {/* ----------------------------------------------------------------------- */}
           
-          <rect x="34" y="0" width="48" height="42" fill="#065f46" stroke="#047857" strokeWidth="2" />
-          <rect x="38" y="4" width="40" height="24" fill="#022c22" />
-          <rect x="42" y="8" width="7" height="7" fill="#f59e0b" />
-          <rect x="52" y="8" width="7" height="7" fill="#ef4444" />
-          <rect x="62" y="8" width="7" height="7" fill="#3b82f6" />
-          <rect x="42" y="18" width="7" height="7" fill="#10b981" />
-          <rect x="52" y="18" width="7" height="7" fill="#ec4899" />
-          <rect x="62" y="18" width="7" height="7" fill="#eab308" />
-        </g>
+          {/* DINING TABLE 1: Round Scandinavian Oak Bistro Table */}
+          <g transform="translate(746, 385)">
+            {/* 4 Padded Chairs */}
+            <rect x="-8" y="-28" width="16" height="12" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1.2" rx="2" />
+            <rect x="-8" y="16" width="16" height="12" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1.2" rx="2" />
+            <rect x="-28" y="-8" width="12" height="16" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1.2" rx="2" />
+            <rect x="16" y="-8" width="12" height="16" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1.2" rx="2" />
 
-        <circle cx="490" cy="460" r="6" fill="#64748b" stroke="#334155" strokeWidth="1.5" />
-        <circle cx="920" cy="370" r="6" fill="#64748b" stroke="#334155" strokeWidth="1.5" />
+            {/* Circular Table Top */}
+            <circle cx="0" cy="0" r="19" fill="#f59e0b" stroke="#b45309" strokeWidth="2" />
+            <circle cx="0" cy="0" r="16" fill="#d97706" />
+
+            {/* Tabletop Props: Ceramic Vase & Coffee Cup */}
+            <circle cx="0" cy="0" r="3.5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+            <circle cx="0" cy="0" r="1.5" fill="#16a34a" />
+            <circle cx="-7" cy="-5" r="2.5" fill="#fef08a" stroke="#ca8a04" strokeWidth="0.8" />
+            <circle cx="6" cy="6" r="2.5" fill="#fef08a" stroke="#ca8a04" strokeWidth="0.8" />
+          </g>
+
+          {/* DINING TABLE 2: High-Top Communal Dining Bar */}
+          <g transform="translate(805, 362)">
+            {/* 6 Bar Stools */}
+            {[18, 48, 78, 106].map((sx, i) => (
+              <g key={`stool-top-${i}`}>
+                <circle cx={sx} cy="-8" r="6" fill="#0284c7" stroke="#0369a1" strokeWidth="1.5" />
+                <circle cx={sx} cy="-8" r="2.5" fill="#38bdf8" />
+                <circle cx={sx} cy="52" r="6" fill="#0284c7" stroke="#0369a1" strokeWidth="1.5" />
+                <circle cx={sx} cy="52" r="2.5" fill="#38bdf8" />
+              </g>
+            ))}
+
+            {/* Rectangular Table Body */}
+            <rect x="0" y="0" width="125" height="44" fill="#d97706" stroke="#78350f" strokeWidth="2.2" rx="3" />
+            <rect x="4" y="4" width="117" height="36" fill="#b45309" rx="2" />
+            {/* Center Table Runner */}
+            <rect x="10" y="16" width="105" height="12" fill="#fef3c7" rx="1" />
+            
+            {/* Tabletop Items: Condiments, Water Pitcher, Plates */}
+            <rect x="22" y="18" width="12" height="8" fill="#f8fafc" stroke="#94a3b8" strokeWidth="0.8" rx="1" />
+            <circle cx="48" cy="22" r="3.5" fill="#38bdf8" stroke="#0284c7" strokeWidth="1" />
+            <rect x="68" y="18" width="14" height="8" fill="#f8fafc" stroke="#94a3b8" strokeWidth="0.8" rx="1" />
+            <circle cx="98" cy="22" r="3" fill="#ffffff" stroke="#64748b" strokeWidth="0.8" />
+          </g>
+
+          {/* ----------------------------------------------------------------------- */}
+          {/* 3. CASUAL BOOTH & COFFEE LOUNGE */}
+          {/* ----------------------------------------------------------------------- */}
+          
+          {/* DINING TABLE 3: Intimate Bistro Corner Table */}
+          <g transform="translate(746, 495)">
+            <circle cx="-16" cy="0" r="6" fill="#d946ef" stroke="#a21caf" strokeWidth="1.5" />
+            <circle cx="16" cy="0" r="6" fill="#d946ef" stroke="#a21caf" strokeWidth="1.5" />
+            <circle cx="0" cy="18" r="6" fill="#d946ef" stroke="#a21caf" strokeWidth="1.5" />
+
+            <circle cx="0" cy="0" r="17" fill="#f8fafc" stroke="#64748b" strokeWidth="2" />
+            <circle cx="0" cy="0" r="14" fill="#e2e8f0" />
+            {/* Laptop / Notebook & Tea */}
+            <rect x="-6" y="-5" width="12" height="9" fill="#0f172a" rx="1" />
+            <circle cx="5" cy="5" r="2.5" fill="#10b981" stroke="#047857" strokeWidth="0.8" />
+          </g>
+
+          {/* DINING SECTION 4: Sage Green Upholstered Cafe Booth */}
+          <g transform="translate(805, 465)">
+            {/* L-Shaped / Bench Sofa Cushion */}
+            <rect x="0" y="0" width="125" height="85" fill="#166534" stroke="#14532d" strokeWidth="2.5" rx="4" />
+            <rect x="6" y="6" width="113" height="20" fill="#15803d" rx="2" />
+            {/* Throw Pillows */}
+            <rect x="12" y="9" width="14" height="14" fill="#ca8a04" rx="2" />
+            <rect x="36" y="9" width="14" height="14" fill="#d97706" rx="2" />
+            <rect x="74" y="9" width="14" height="14" fill="#ca8a04" rx="2" />
+            <rect x="98" y="9" width="14" height="14" fill="#d97706" rx="2" />
+
+            {/* Dining Table inside Booth */}
+            <rect x="12" y="32" width="101" height="34" fill="#f59e0b" stroke="#92400e" strokeWidth="2" rx="3" />
+            <rect x="16" y="36" width="93" height="26" fill="#d97706" rx="1" />
+            
+            {/* Dining Table Items: Ceramic Plates, Coffee Mugs, Napkins */}
+            <circle cx="32" cy="49" r="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+            <circle cx="32" cy="49" r="2" fill="#b45309" />
+            <circle cx="62" cy="49" r="4" fill="#38bdf8" stroke="#0284c7" strokeWidth="1" />
+            <circle cx="92" cy="49" r="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+            <circle cx="92" cy="49" r="2" fill="#15803d" />
+
+            {/* Bottom Chairs */}
+            <circle cx="32" cy="74" r="5.5" fill="#166534" stroke="#14532d" strokeWidth="1.2" />
+            <circle cx="62" cy="74" r="5.5" fill="#166534" stroke="#14532d" strokeWidth="1.2" />
+            <circle cx="92" cy="74" r="5.5" fill="#166534" stroke="#14532d" strokeWidth="1.2" />
+          </g>
+
+          {/* ----------------------------------------------------------------------- */}
+          {/* 4. ECO RECYCLING STATION & GREENERY */}
+          {/* ----------------------------------------------------------------------- */}
+          {/* Waste / Recycling Sorting Station */}
+          <g transform="translate(696, 435)">
+            <rect x="0" y="0" width="26" height="34" fill="#334155" stroke="#1e293b" strokeWidth="1.2" rx="2" />
+            <circle cx="13" cy="8" r="3" fill="#22c55e" />
+            <circle cx="13" cy="17" r="3" fill="#38bdf8" />
+            <circle cx="13" cy="26" r="3" fill="#f59e0b" />
+          </g>
+
+          {/* Large Indoor Potted Ficus Plant */}
+          <g transform="translate(696, 532)">
+            <rect x="2" y="14" width="18" height="20" fill="#b45309" stroke="#78350f" strokeWidth="1.5" rx="2" />
+            <circle cx="11" cy="8" r="10" fill="#15803d" stroke="#14532d" strokeWidth="1.5" />
+            <circle cx="11" cy="8" r="6" fill="#22c55e" />
+          </g>
+        </g>
 
         {/* ========================================================================= */}
         {/* MAIN OPEN WORKSTATION DESKS (6 TOP ROW | 6 BOTTOM ROW) */}
