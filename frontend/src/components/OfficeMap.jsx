@@ -118,6 +118,7 @@ export default function OfficeMap({
 
   const walkingLoopsRef = useRef({});
   const patrolTimeoutRef = useRef(null);
+  const recentEatersRef = useRef([]);
 
   // 1. Clock & Date Live Interval
   useEffect(() => {
@@ -385,10 +386,24 @@ export default function OfficeMap({
 
       if (availableCandidates.length === 0) return;
 
-      // Randomly choose 1 or 2 idle agents
-      const countToPick = Math.min(availableCandidates.length, Math.random() > 0.35 ? 2 : 1);
-      const shuffled = [...availableCandidates].sort(() => 0.5 - Math.random());
+      // Prioritize employees who have NOT visited the cafe recently
+      let eligible = availableCandidates.filter((ag) => !recentEatersRef.current.includes(ag.id));
+      if (eligible.length < 2) {
+        // Reset recent history once all/most available employees have had their turn
+        recentEatersRef.current = [];
+        eligible = availableCandidates;
+      }
+
+      // Randomly choose 1 or 2 idle agents from the eligible non-recent pool
+      const countToPick = Math.min(eligible.length, Math.random() > 0.35 ? 2 : 1);
+      const shuffled = [...eligible].sort(() => 0.5 - Math.random());
       const selectedEaters = shuffled.slice(0, countToPick);
+
+      // Track visited employees so others get their turn next
+      recentEatersRef.current.push(...selectedEaters.map((e) => e.id));
+      if (recentEatersRef.current.length > 8) {
+        recentEatersRef.current = recentEatersRef.current.slice(-5);
+      }
 
       selectedEaters.forEach((eater, idx) => {
         const spot = diningSpots[(idx + Math.floor(Math.random() * diningSpots.length)) % diningSpots.length];
@@ -563,28 +578,108 @@ export default function OfficeMap({
         <circle cx="92" cy="180" r="9" fill="#d97706" stroke="#78350f" strokeWidth="2" filter="url(#softShadow)" />
 
         {/* ========================================================================= */}
-        {/* ROOM 2: 🤝 CONFERENCE ROOM (Top Center) */}
+        {/* ROOM 2: 🤝 MINIMAL LIGHT-THEME CONFERENCE & SPRINT ROOM (Top Center) */}
         {/* ========================================================================= */}
         <rect x="245" y="18" width="280" height="190" fill="none" stroke="#ffffff" strokeWidth="8" />
-        <rect x="249" y="22" width="272" height="182" fill="none" stroke="#475569" strokeWidth="1.5" />
+        <rect x="249" y="22" width="272" height="182" fill="none" stroke="#94a3b8" strokeWidth="1.5" />
         <rect x="365" y="195" width="40" height="18" fill="#b9ccbf" />
 
-        <g transform="translate(280, 80)" filter="url(#softShadow)">
-          <rect x="0" y="0" width="170" height="65" fill="#f59e0b" stroke="#92400e" strokeWidth="2.5" rx="6" />
-          <rect x="6" y="6" width="158" height="53" fill="#d97706" rx="4" />
-          <rect x="135" y="12" width="18" height="12" fill="#38bdf8" stroke="#0f172a" strokeWidth="1.2" />
-          <circle cx="20" cy="22" r="5" fill="#15803d" stroke="#052e16" />
+        {/* Natural mint tile floor seamlessly connects through the room */}
+
+        {/* Left Daylight Window */}
+        <g transform="translate(266, 24)" filter="url(#softShadow)">
+          <rect x="0" y="0" width="38" height="18" fill="#e0f2fe" stroke="#94a3b8" strokeWidth="1.5" rx="1" />
+          <line x1="19" y1="0" x2="19" y2="18" stroke="#94a3b8" strokeWidth="1" />
+          <line x1="0" y1="9" x2="38" y2="9" stroke="#94a3b8" strokeWidth="1" />
         </g>
 
-        {/* Purple Chairs */}
+        {/* Minimal Frameless 4K Smart Presentation Display (Top Center Wall) */}
+        <g transform="translate(318, 24)" filter="url(#softShadow)">
+          <rect x="0" y="0" width="134" height="20" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" rx="3" />
+          <rect x="3" y="3" width="128" height="14" fill="#f8fafc" rx="1" />
+          <circle cx="12" cy="10" r="2.5" fill="#10b981" />
+          <text x="68" y="13.5" fill="#1e293b" fontSize="5.5" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">
+            📊 SPRINT PLANNING & ARCHITECTURE
+          </text>
+        </g>
+
+        {/* Right Daylight Window */}
+        <g transform="translate(466, 24)" filter="url(#softShadow)">
+          <rect x="0" y="0" width="38" height="18" fill="#e0f2fe" stroke="#94a3b8" strokeWidth="1.5" rx="1" />
+          <line x1="19" y1="0" x2="19" y2="18" stroke="#94a3b8" strokeWidth="1" />
+          <line x1="0" y1="9" x2="38" y2="9" stroke="#94a3b8" strokeWidth="1" />
+        </g>
+
+        {/* Minimal Frameless Glass Whiteboard (Left Wall) */}
+        <g transform="translate(254, 52)" filter="url(#softShadow)">
+          <rect x="0" y="0" width="11" height="42" fill="#ffffff" stroke="#94a3b8" strokeWidth="1" rx="1" opacity="0.95" />
+          <rect x="2" y="4" width="7" height="7" fill="#fef08a" stroke="#facc15" strokeWidth="0.5" />
+          <rect x="2" y="13" width="7" height="7" fill="#fbcfe8" stroke="#f472b6" strokeWidth="0.5" />
+          <rect x="2" y="22" width="7" height="7" fill="#bfdbfe" stroke="#60a5fa" strokeWidth="0.5" />
+          <rect x="2" y="31" width="7" height="7" fill="#bbf7d0" stroke="#4ade80" strokeWidth="0.5" />
+        </g>
+
+        {/* Minimal Plant (Bottom Right Corner) */}
+        <g transform="translate(492, 155)" filter="url(#softShadow)">
+          <rect x="0" y="10" width="16" height="16" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.2" rx="3" />
+          <circle cx="8" cy="5" r="9" fill="#16a34a" stroke="#15803d" strokeWidth="1" />
+          <circle cx="8" cy="5" r="5" fill="#22c55e" />
+        </g>
+
+        {/* Minimal Natural Light Blonde Oak Conference Table */}
+        <g transform="translate(275, 76)" filter="url(#softShadow)">
+          {/* Table Outer Blonde Oak Frame */}
+          <rect x="0" y="0" width="180" height="70" rx="12" fill="#f5ede2" stroke="#d5c4af" strokeWidth="2" />
+          <rect x="4" y="4" width="172" height="62" rx="10" fill="#faf6f0" />
+
+          {/* Minimalist Recessed White Aluminum Center Hub */}
+          <rect x="22" y="16" width="136" height="38" rx="5" fill="#ffffff" stroke="#e2e8f0" strokeWidth="1" />
+          
+          {/* Center Connectivity Ports */}
+          <rect x="74" y="24" width="32" height="14" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="0.8" rx="1" />
+          <circle cx="82" cy="31" r="1.5" fill="#10b981" />
+          <circle cx="90" cy="31" r="1.5" fill="#3b82f6" />
+          <circle cx="98" cy="31" r="1.5" fill="#f59e0b" />
+
+          {/* Small Center Ceramic Flowerpot */}
+          <circle cx="56" cy="35" r="3.5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.8" />
+          <circle cx="56" cy="35" r="1.8" fill="#16a34a" />
+
+          {/* Minimal Laptops & White Ceramic Coffee Cups */}
+          <rect x="30" y="20" width="12" height="9" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" rx="1" />
+          <circle cx="33" cy="33" r="2.2" fill="#ffffff" stroke="#b45309" strokeWidth="0.8" />
+          
+          <rect x="138" y="20" width="12" height="9" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" rx="1" />
+          <circle cx="147" cy="33" r="2.2" fill="#ffffff" stroke="#b45309" strokeWidth="0.8" />
+        </g>
+
+        {/* Minimal Light Ergonomic Swivel Chairs */}
+        {/* Top 5 Chairs */}
         {[300, 335, 370, 405, 435].map((cx, i) => (
-          <rect key={`c-top-${i}`} x={cx - 10} y={64} width="20" height="16" rx="3" fill="#86198f" stroke="#4a044e" strokeWidth="2" filter="url(#softShadow)" />
+          <g key={`exec-top-${i}`} transform={`translate(${cx - 10}, 56)`} filter="url(#softShadow)">
+            <rect x="0" y="0" width="20" height="18" rx="3" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+            <rect x="3" y="3" width="14" height="12" rx="2" fill="#e2e8f0" />
+            <line x1="0" y1="9" x2="20" y2="9" stroke="#cbd5e1" strokeWidth="1" />
+          </g>
         ))}
+        {/* Bottom 5 Chairs */}
         {[300, 335, 370, 405, 435].map((cx, i) => (
-          <rect key={`c-bot-${i}`} x={cx - 10} y={145} width="20" height="16" rx="3" fill="#86198f" stroke="#4a044e" strokeWidth="2" filter="url(#softShadow)" />
+          <g key={`exec-bot-${i}`} transform={`translate(${cx - 10}, 148)`} filter="url(#softShadow)">
+            <rect x="0" y="0" width="20" height="18" rx="3" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+            <rect x="3" y="3" width="14" height="12" rx="2" fill="#e2e8f0" />
+            <line x1="0" y1="9" x2="20" y2="9" stroke="#cbd5e1" strokeWidth="1" />
+          </g>
         ))}
-        <rect x="260" y="102" width="16" height="20" rx="3" fill="#86198f" stroke="#4a044e" strokeWidth="2" filter="url(#softShadow)" />
-        <rect x="450" y="102" width="16" height="20" rx="3" fill="#86198f" stroke="#4a044e" strokeWidth="2" filter="url(#softShadow)" />
+        {/* Left Head Chair (Marcus Director Seat) */}
+        <g transform="translate(250, 101)" filter="url(#softShadow)">
+          <rect x="0" y="0" width="18" height="20" rx="3" fill="#ffffff" stroke="#f59e0b" strokeWidth="1.8" />
+          <rect x="3" y="3" width="12" height="14" rx="2" fill="#fef3c7" />
+        </g>
+        {/* Right Foot Chair */}
+        <g transform="translate(462, 101)" filter="url(#softShadow)">
+          <rect x="0" y="0" width="18" height="20" rx="3" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+          <rect x="3" y="3" width="12" height="14" rx="2" fill="#e2e8f0" />
+        </g>
 
         {/* ========================================================================= */}
         {/* ROOM 3: 📑 RECEPTION / CUBICLE HALF WALL (Center Left) */}
