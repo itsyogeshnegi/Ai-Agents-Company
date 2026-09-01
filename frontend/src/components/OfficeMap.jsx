@@ -351,6 +351,89 @@ export default function OfficeMap({
     };
   }, [meetingMode]);
 
+  // Autonomous Cafe Dining & Coffee Break Routine (1-2 Idle Agents visit the Cafe)
+  useEffect(() => {
+    if (meetingMode) return;
+
+    const diningSpots = [
+      { name: "Round Bistro Table", coord: { x: 746, y: 385 }, speech: "🥪 Enjoying a sandwich at the bistro table!" },
+      { name: "Communal Dining Bar", coord: { x: 865, y: 385 }, speech: "🍱 Eating lunch & chatting at the dining bar!" },
+      { name: "Cafe Booth Sofa", coord: { x: 855, y: 500 }, speech: "☕ Relaxing with coffee in the lounge booth!" },
+      { name: "Espresso Counter", coord: { x: 730, y: 338 }, speech: "🥐 Tasting fresh pastries from the cafe bar!" }
+    ];
+
+    const departurePhrases = [
+      "🥪 Grabbing a quick lunch at the cafe!",
+      "☕ Heading to the cafe for an espresso break...",
+      "🥗 Time for a healthy lunch break!",
+      "🥐 Picking up a fresh snack from the cafe"
+    ];
+
+    const returnPhrases = [
+      "💼 Back at workstation, recharged & ready!",
+      "⚡ Great lunch! Resuming sprint standby.",
+      "✨ Refreshed after a delicious cafe break!"
+    ];
+
+    const runDiningBreakRoutine = () => {
+      if (meetingMode) return;
+
+      // Filter idle agents sitting in open office (exclude Marcus who stays in boss office)
+      const availableCandidates = agents.filter(
+        (ag) => ag.id !== 'marcus' && ag.status === 'idle' && !isWalking[ag.id]
+      );
+
+      if (availableCandidates.length === 0) return;
+
+      // Randomly choose 1 or 2 idle agents
+      const countToPick = Math.min(availableCandidates.length, Math.random() > 0.35 ? 2 : 1);
+      const shuffled = [...availableCandidates].sort(() => 0.5 - Math.random());
+      const selectedEaters = shuffled.slice(0, countToPick);
+
+      selectedEaters.forEach((eater, idx) => {
+        const spot = diningSpots[(idx + Math.floor(Math.random() * diningSpots.length)) % diningSpots.length];
+        const departureMsg = departurePhrases[Math.floor(Math.random() * departurePhrases.length)];
+        const returnMsg = returnPhrases[Math.floor(Math.random() * returnPhrases.length)];
+        const eaterDesk = FIXED_DESK_SEATS[eater.id] || { x: 290, y: 330 };
+
+        // Step 1: Depart desk for the cafe
+        setInternalSpeech((prev) => ({ ...prev, [eater.id]: departureMsg }));
+        const pathToCafe = computePath(eaterDesk, spot.coord);
+
+        walkAgentAlongPath(eater.id, pathToCafe, idx * 800, () => {
+          // Arrived at Cafe: Eat / Drink & Chat
+          setInternalSpeech((prev) => ({ ...prev, [eater.id]: spot.speech }));
+
+          setTimeout(() => {
+            if (meetingMode) return;
+            // Step 2: Return to workstation desk
+            setInternalSpeech((prev) => ({ ...prev, [eater.id]: returnMsg }));
+            const returnPath = computePath(spot.coord, eaterDesk);
+
+            walkAgentAlongPath(eater.id, returnPath, 0, () => {
+              setTimeout(() => {
+                setInternalSpeech((prev) => {
+                  const next = { ...prev };
+                  delete next[eater.id];
+                  return next;
+                });
+              }, 4000);
+            });
+          }, 14000); // 14 seconds dining time
+        });
+      });
+    };
+
+    // First lunch round after 16s, then repeats every 48s
+    const diningInitialTimer = setTimeout(runDiningBreakRoutine, 16000);
+    const diningRecurringTimer = setInterval(runDiningBreakRoutine, 48000);
+
+    return () => {
+      clearTimeout(diningInitialTimer);
+      clearInterval(diningRecurringTimer);
+    };
+  }, [meetingMode, agents]);
+
   // Team standup & meeting movement
   useEffect(() => {
     agents.forEach((ag, idx) => {
