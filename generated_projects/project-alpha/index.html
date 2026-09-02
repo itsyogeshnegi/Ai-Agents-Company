@@ -1,417 +1,468 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumina Grand | Ultra-Luxury Hotel & Spa</title>
+    <title>NeoTic | The Ultimate Modern Tic-Tac-Toe Experience</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
-        .text-gradient { background: linear-gradient(to right, #1a1a1a, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .room-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .room-card:hover { transform: translateY(-10px); }
-        .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background-color: #6366f1; transition: width 0.3s ease; }
-        .nav-link:hover::after { width: 100%; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .game-cell {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            aspect-ratio: 1 / 1;
+        }
+        .game-cell:hover:empty {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(0.98);
+        }
+        .x-mark {
+            color: #60a5fa;
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+        }
+        .o-mark {
+            color: #f472b6;
+            text-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+        }
+        .winning-cell {
+            background: rgba(34, 197, 94, 0.2) !important;
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-dark {
+            background-color: #0f172a;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+<body class="bg-dark text-slate-200 min-h-screen overflow-x-hidden">
 
     <!-- Navigation -->
-    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 py-6 px-6 md:px-12">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <nav class="fixed top-0 w-full z-50 glass border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl">L</div>
-                <span class="text-xl font-extrabold tracking-tight">LUMINA <span class="text-indigo-600">GRAND</span></span>
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-pink-500 rounded-xl flex items-center justify-center font-extrabold text-white text-xl">N</div>
+                <span class="text-xl font-bold tracking-tight text-white">Neo<span class="text-blue-400">Tic</span></span>
             </div>
-            
-            <div class="hidden md:flex items-center gap-8 font-medium text-sm">
-                <a href="#home" class="nav-link relative text-slate-600 hover:text-indigo-600 transition-colors">Home</a>
-                <a href="#rooms" class="nav-link relative text-slate-600 hover:text-indigo-600 transition-colors">Rooms</a>
-                <a href="#amenities" class="nav-link relative text-slate-600 hover:text-indigo-600 transition-colors">Amenities</a>
-                <a href="#reviews" class="nav-link relative text-slate-600 hover:text-indigo-600 transition-colors">Reviews</a>
-                <button onclick="toggleModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-full hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95">
-                    Book Now
-                </button>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+                <a href="#game" class="hover:text-white transition-colors">Play Now</a>
+                <a href="#features" class="hover:text-white transition-colors">Features</a>
+                <a href="#leaderboard" class="hover:text-white transition-colors">Hall of Fame</a>
             </div>
-            
-            <button class="md:hidden text-slate-800" id="mobile-menu-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-            </button>
+            <a href="#game" class="px-5 py-2.5 bg-white text-slate-900 rounded-full text-sm font-bold hover:bg-blue-400 hover:text-white transition-all transform hover:scale-105 active:scale-95">
+                Start Game
+            </a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="relative min-h-screen flex items-center justify-center pt-20 px-6 overflow-hidden">
-        <!-- Background Visuals -->
-        <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1566073771259-1a428e2830ef?auto=format&fit=crop&q=80&w=2000" alt="Luxury Hotel" class="w-full h-full object-cover scale-105 animate-pulse-slow" style="animation: pulse 10s infinite alternate;">
-            <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-slate-50"></div>
+    <section class="pt-32 pb-20 px-6 relative overflow-hidden">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
+            <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-600/20 blur-[120px] rounded-full"></div>
         </div>
 
-        <div class="relative z-10 max-w-5xl text-center animate-fade-in">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold tracking-widest uppercase mb-6">
-                <span class="w-2 h-2 bg-indigo-400 rounded-full animate-ping"></span>
-                Experience Pure Opulence
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-blue-400 mb-6 animate-bounce">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                v2.0 Now Live: AI Opponent Added
             </div>
-            <h1 class="text-5xl md:text-8xl font-extrabold text-white leading-tight mb-8 drop-shadow-2xl">
-                Redefining the Art of <br> <span class="text-indigo-300">Modern Luxury</span>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight">
+                The Classic Game, <br> <span class="gradient-text">Reimagined for 2024.</span>
             </h1>
-            <p class="text-lg md:text-xl text-slate-100 mb-12 max-w-2xl mx-auto opacity-90 leading-relaxed">
-                Nestled in the heart of the city, Lumina Grand offers a sanctuary of elegance, where world-class service meets architectural brilliance.
+            <p class="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Experience Tic-Tac-Toe like never before. Stunning visuals, flawless logic, and an intelligent AI that will challenge your every move.
             </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#game" class="px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 hover:-translate-y-1">
+                    Play Against AI
+                </a>
+                <a href="#features" class="px-8 py-4 glass text-white rounded-2xl font-bold text-lg hover:bg-white/10 transition-all border border-white/20">
+                    Explore Features
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Game Section -->
+    <section id="game" class="py-20 px-6 relative">
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
             
-            <!-- Quick Booking Bar -->
-            <div class="glass p-4 md:p-8 rounded-3xl shadow-2xl border border-white/50 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="text-left">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Check-In</label>
-                    <input type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium">
+            <!-- Game Engine -->
+            <div class="relative">
+                <!-- Game Status Overlay -->
+                <div id="status-bar" class="mb-8 text-center">
+                    <div id="turn-indicator" class="text-2xl font-bold text-white mb-2">
+                        Player <span class="x-mark">X</span>'s Turn
+                    </div>
+                    <div id="game-mode-display" class="text-slate-500 text-sm font-medium">
+                        Mode: Human vs Human
+                    </div>
                 </div>
-                <div class="text-left">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Check-Out</label>
-                    <input type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium">
+
+                <!-- The Board -->
+                <div class="grid grid-cols-3 gap-3 max-w-[400px] mx-auto p-4 glass rounded-3xl shadow-2xl">
+                    <div data-index="0" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="1" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="2" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="3" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="4" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="5" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="6" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="7" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
+                    <div data-index="8" class="game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer"></div>
                 </div>
-                <div class="text-left">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Guests</label>
-                    <select class="w-full p-3 rounded-xl bg-slate-100 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium">
-                        <option>1 Guest</option>
-                        <option selected>2 Guests</option>
-                        <option>3+ Guests</option>
+
+                <!-- Controls -->
+                <div class="mt-10 flex flex-wrap justify-center gap-4">
+                    <button id="reset-btn" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-semibold hover:bg-slate-700 transition-all border border-slate-700">
+                        Reset Match
+                    </button>
+                    <select id="game-mode" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-semibold outline-none border border-slate-700 cursor-pointer hover:bg-slate-700 transition-all">
+                        <option value="pvp">Human vs Human</option>
+                        <option value="pva">Human vs AI</option>
                     </select>
                 </div>
-                <button onclick="toggleModal()" class="h-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200">
-                    Check Availability
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features / Amenities Section -->
-    <section id="amenities" class="py-24 px-6 max-w-7xl mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="text-indigo-600 font-bold tracking-widest uppercase text-sm mb-3">World-Class Amenities</h2>
-            <h3 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">Crafted for the Exceptional</h3>
-            <p class="text-slate-500 max-w-2xl mx-auto text-lg">From holistic wellness to Michelin-star dining, we provide every detail necessary for a flawless stay.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Feature 1 -->
-            <div class="group p-8 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <h4 class="text-xl font-bold mb-3">Zenith Spa & Wellness</h4>
-                <p class="text-slate-500 leading-relaxed">Experience ultimate rejuvenation with our signature aromatherapy and hydrothermal circuits.</p>
-            </div>
-            <!-- Feature 2 -->
-            <div class="group p-8 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C17.832 18.477 16.246 18 14.5 18s-3.332.477-4.5 1.253" />
-                    </svg>
-                </div>
-                <h4 class="text-xl font-bold mb-3">Gourmet Gastronomy</h4>
-                <p class="text-slate-500 leading-relaxed">A culinary journey through 3 award-winning restaurants featuring local and international fusion.</p>
-            </div>
-            <!-- Feature 3 -->
-            <div class="group p-8 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M8 3.935V9a2 2 0 002 2h4a2 2 0 002-2V3.935" />
-                    </svg>
-                </div>
-                <h4 class="text-xl font-bold mb-3">Concierge Gold</h4>
-                <p class="text-slate-500 leading-relaxed">Our 24/7 dedicated concierge team ensures every whim is met with precision and grace.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Interactive Room Explorer -->
-    <section id="rooms" class="py-24 bg-slate-100 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                <div class="max-w-2xl">
-                    <h2 class="text-indigo-600 font-bold tracking-widest uppercase text-sm mb-3">Curated Stays</h2>
-                    <h3 class="text-4xl md:text-5xl font-extrabold text-slate-900">Find Your Perfect Suite</h3>
-                </div>
-                <div class="flex p-1 bg-slate-200 rounded-2xl" id="room-toggle">
-                    <button onclick="switchRoom('deluxe')" id="btn-deluxe" class="px-6 py-2 rounded-xl text-sm font-bold transition-all bg-white text-indigo-600 shadow-sm">Deluxe</button>
-                    <button onclick="switchRoom('executive')" id="btn-executive" class="px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-600">Executive</button>
-                    <button onclick="switchRoom('presidential')" id="btn-presidential" class="px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-600">Presidential</button>
-                </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div class="relative group">
-                    <div class="absolute -inset-4 bg-indigo-200 rounded-[40px] blur-2xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                    <img id="room-image" src="https://images.unsplash.com/photo-1618773928121-c32242b61b4a?auto=format&fit=crop&q=80&w=1000" alt="Room" class="relative rounded-[32px] w-full h-[500px] object-cover shadow-2xl transition-all duration-500">
+            <!-- Game Stats & Info -->
+            <div class="space-y-8">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass p-6 rounded-3xl border-l-4 border-blue-500">
+                        <div class="text-slate-400 text-sm font-medium mb-1">Player X Wins</div>
+                        <div id="score-x" class="text-4xl font-black text-white">0</div>
+                    </div>
+                    <div class="glass p-6 rounded-3xl border-l-4 border-pink-500">
+                        <div class="text-slate-400 text-sm font-medium mb-1">Player O Wins</div>
+                        <div id="score-o" class="text-4xl font-black text-white">0</div>
+                    </div>
                 </div>
                 
-                <div class="space-y-8">
-                    <div class="flex items-center justify-between">
-                        <h4 id="room-title" class="text-4xl font-extrabold text-slate-900">Deluxe Garden Suite</h4>
-                        <div class="text-right">
-                            <span id="room-price" class="text-3xl font-black text-indigo-600">$450</span>
-                            <span class="text-slate-400 text-sm font-medium"> / night</span>
-                        </div>
-                    </div>
-                    <p id="room-desc" class="text-lg text-slate-600 leading-relaxed">A serene escape featuring panoramic views of our botanical gardens, a king-size plush bed, and a marble-clad rain shower.</p>
-                    
-                    <div class="grid grid-cols-2 gap-4" id="room-features">
-                        <div class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                            <span class="text-sm font-semibold text-slate-700">City View</span>
-                        </div>
-                        <div class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                            <span class="text-sm font-semibold text-slate-700">Mini-bar</span>
-                        </div>
-                    </div>
-                    
-                    <button onclick="toggleModal()" class="w-full md:w-auto px-10 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-indigo-600 transition-all shadow-xl hover:shadow-indigo-200">
-                        Reserve This Suite
-                    </button>
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xl font-bold text-white mb-4">How to play?</h3>
+                    <ul class="space-y-3 text-slate-400 text-sm leading-relaxed">
+                        <li class="flex gap-3">
+                            <span class="text-blue-500 font-bold">01.</span>
+                            <span>Choose your mode: local multiplayer or challenge our AI.</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-blue-500 font-bold">02.</span>
+                            <span>Player X always starts the game.</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-blue-500 font-bold">03.</span>
+                            <span>Get three of your marks in a row (horizontal, vertical, or diagonal) to win.</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Testimonials -->
-    <section id="reviews" class="py-24 px-6 max-w-7xl mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="text-indigo-600 font-bold tracking-widest uppercase text-sm mb-3">Guest Stories</h2>
-            <h3 class="text-4xl md:text-5xl font-extrabold text-slate-900">What Our Guests Say</h3>
+    <!-- Features Section -->
+    <section id="features" class="py-20 px-6 bg-white/[0.02]">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-white mb-4">Why NeoTic?</h2>
+                <p class="text-slate-400">Engineered for perfection, designed for elegance.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-3xl hover:bg-white/5 transition-all group">
+                    <div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 mb-6 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Instant Response</h3>
+                    <p class="text-slate-400 leading-relaxed">Zero lag gameplay with highly optimized DOM manipulation for the smoothest experience.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl hover:bg-white/5 transition-all group">
+                    <div class="w-14 h-14 bg-pink-500/20 rounded-2xl flex items-center justify-center text-pink-400 mb-6 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707M6.858 6.858l.049.018M14 10a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Smart AI</h3>
+                    <p class="text-slate-400 leading-relaxed">Our AI uses the Minimax algorithm to ensure it never makes a mistake. Can you beat it?</p>
+                </div>
+                <div class="glass p-8 rounded-3xl hover:bg-white/5 transition-all group">
+                    <div class="w-14 h-14 bg-green-500/20 rounded-2xl flex items-center justify-center text-green-400 mb-6 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Perfect Logic</h3>
+                    <p class="text-slate-400 leading-relaxed">Rigorous edge-case handling ensuring that every draw and victory is calculated correctly.</p>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="p-8 rounded-3xl bg-white shadow-sm border border-slate-100 italic text-slate-600 relative">
-                <div class="absolute -top-4 -left-4 text-6xl text-indigo-100 font-serif">“</div>
-                <p class="mb-6 relative z-10 leading-relaxed">"The attention to detail is unparalleled. From the moment I stepped into the lobby, I felt like royalty. The spa is a must-visit!"</p>
-                <div class="flex items-center gap-4 not-italic">
-                    <img src="https://i.pravatar.cc/150?u=1" class="w-12 h-12 rounded-full" alt="User">
-                    <div>
-                        <p class="font-bold text-slate-900">Julianne Moore</p>
-                        <p class="text-xs text-slate-400 uppercase font-bold">London, UK</p>
-                    </div>
-                </div>
-            </div>
-            <div class="p-8 rounded-3xl bg-white shadow-sm border border-slate-100 italic text-slate-600 relative">
-                <div class="absolute -top-4 -left-4 text-6xl text-indigo-100 font-serif">“</div>
-                <p class="mb-6 relative z-10 leading-relaxed">"A perfect blend of modern architecture and cozy comfort. The Presidential suite is breathtaking. I will definitely be returning."</p>
-                <div class="flex items-center gap-4 not-italic">
-                    <img src="https://i.pravatar.cc/150?u=2" class="w-12 h-12 rounded-full" alt="User">
-                    <div>
-                        <p class="font-bold text-slate-900">Marcus Chen</p>
-                        <p class="text-xs text-slate-400 uppercase font-bold">Singapore</p>
-                    </div>
-                </div>
-            </div>
-            <div class="p-8 rounded-3xl bg-white shadow-sm border border-slate-100 italic text-slate-600 relative">
-                <div class="absolute -top-4 -left-4 text-6xl text-indigo-100 font-serif">“</div>
-                <p class="mb-6 relative z-10 leading-relaxed">"Exceptional service, world-class dining, and the most comfortable beds I've ever slept in. Lumina Grand is pure magic."</p>
-                <div class="flex items-center gap-4 not-italic">
-                    <img src="https://i.pravatar.cc/150?u=3" class="w-12 h-12 rounded-full" alt="User">
-                    <div>
-                        <p class="font-bold text-slate-900">Sarah Jenkins</p>
-                        <p class="text-xs text-slate-400 uppercase font-bold">New York, USA</p>
-                    </div>
-                </div>
+    <!-- Lead Capture / Feedback -->
+    <section class="py-20 px-6">
+        <div class="max-w-3xl mx-auto glass p-10 rounded-[40px] border border-white/10 text-center relative overflow-hidden">
+            <div class="relative z-10">
+                <h2 class="text-3xl font-bold text-white mb-4">Enjoying NeoTic?</h2>
+                <p class="text-slate-400 mb-8">Join our newsletter for more indie gaming experiments and updates.</p>
+                <form id="lead-form" class="flex flex-col md:flex-row gap-4">
+                    <input type="email" required placeholder="Enter your email" class="flex-1 px-6 py-4 rounded-2xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-blue-500 transition-all">
+                    <button type="submit" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-pink-600 text-white font-bold rounded-2xl hover:opacity-90 transition-all shadow-lg">
+                        Subscribe Now
+                    </button>
+                </form>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-20 px-6">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div class="col-span-1 md:col-span-2">
-                <div class="flex items-center gap-2 text-white mb-6">
-                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-xl">L</div>
-                    <span class="text-xl font-extrabold tracking-tight">LUMINA <span class="text-indigo-500">GRAND</span></span>
-                </div>
-                <p class="max-w-sm leading-relaxed mb-8">
-                    Creating unforgettable memories through unmatched hospitality and luxury since 1992. Join us for a stay that transcends the ordinary.
-                </p>
-                <div class="flex gap-4">
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073C24 5.442 18.412 0 12 0 5.588 0 0 5.442 0 12.073C0 18.704 5.588 24 12 24s12-5.296 12-11.927zM12 .892C15.556.892 18.46 3.797 18.46 7.353c0 3.555-2.904 6.46-6.46 6.46-3.555 0-6.46-2.905-6.46-6.46 0-3.556 2.904-6.461 6.46-6.461z"/></svg>
-                    </a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.691-4.919-4.919-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg>
-                    </a>
-                </div>
+    <footer class="py-12 px-6 border-t border-white/10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-pink-500 rounded-lg flex items-center justify-center font-extrabold text-white text-sm">N</div>
+                <span class="text-lg font-bold tracking-tight text-white">Neo<span class="text-blue-400">Tic</span></span>
             </div>
-            <div>
-                <h5 class="text-white font-bold mb-6">Quick Links</h5>
-                <ul class="space-y-4 text-sm">
-                    <li><a href="#" class="hover:text-indigo-400 transition-colors">About Us</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition-colors">Room Rates</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition-colors">Dining Guide</a></li>
-                    <li><a href="#" class="hover:text-indigo-400 transition-colors">Privacy Policy</a></li>
-                </ul>
+            <p class="text-slate-500 text-sm">&copy; 2024 NeoTic Labs. All rights reserved.</p>
+            <div class="flex gap-6 text-slate-400 text-sm font-medium">
+                <a href="#" class="hover:text-white transition-colors">Terms</a>
+                <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                <a href="#" class="hover:text-white transition-colors">GitHub</a>
             </div>
-            <div>
-                <h5 class="text-white font-bold mb-6">Contact</h5>
-                <ul class="space-y-4 text-sm">
-                    <li class="flex items-center gap-3">
-                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        123 Luxury Blvd, Grand City
-                    </li>
-                    <li class="flex items-center gap-3">
-                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                        +1 (555) LUX-GRAND
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-800 text-center text-xs font-medium uppercase tracking-widest">
-            &copy; 2024 Lumina Grand Hotel & Spa. All Rights Reserved.
         </div>
     </footer>
 
-    <!-- Booking Modal -->
-    <div id="booking-modal" class="fixed inset-0 z-[100] hidden items-center justify-center px-6">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal()"></div>
-        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 animate-fade-in">
-            <button onclick="toggleModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            
-            <div class="text-center mb-8">
-                <h3 class="text-3xl font-extrabold text-slate-900 mb-2">Secure Your Stay</h3>
-                <p class="text-slate-500">Enter your details and we'll handle the rest.</p>
+    <!-- Success Modal -->
+    <div id="modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-6">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div class="relative glass p-8 rounded-3xl max-w-sm w-full text-center border border-white/20 animate-in fade-in zoom-in duration-300">
+            <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
             </div>
-
-            <form id="booking-form" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-500 uppercase">First Name</label>
-                        <input required type="text" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="John">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-500 uppercase">Last Name</label>
-                        <input required type="text" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Doe">
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase">Email Address</label>
-                    <input required type="email" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="john@example.com">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase">Preferred Room</label>
-                    <select class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                        <option>Deluxe Garden Suite</option>
-                        <option>Executive City Suite</option>
-                        <option>Presidential Penthouse</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95">
-                    Confirm Reservation
-                </button>
-            </form>
+            <h3 class="text-2xl font-bold text-white mb-2">Success!</h3>
+            <p class="text-slate-400 mb-8">Thanks for subscribing. We'll keep you posted on new updates!</p>
+            <button id="close-modal" class="w-full py-3 bg-white text-slate-900 font-bold rounded-xl hover:bg-blue-400 hover:text-white transition-all">
+                Close
+            </button>
         </div>
     </div>
 
     <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                nav.classList.add('glass', 'shadow-sm', 'py-4');
-                nav.classList.remove('py-6');
-            } else {
-                nav.classList.remove('glass', 'shadow-sm', 'py-4');
-                nav.classList.add('py-6');
-            }
-        });
-
-        // Modal Toggle
-        function toggleModal() {
-            const modal = document.getElementById('booking-modal');
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-            document.body.classList.toggle('overflow-hidden');
-        }
-
-        // Form Submission
-        document.getElementById('booking-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('Thank you for your request! Our concierge team will contact you within 15 minutes to finalize your luxury experience.');
-            toggleModal();
-        });
-
-        // Room Explorer Logic
-        const roomData = {
-            deluxe: {
-                title: "Deluxe Garden Suite",
-                price: "$450",
-                desc: "A serene escape featuring panoramic views of our botanical gardens, a king-size plush bed, and a marble-clad rain shower.",
-                img: "https://images.unsplash.com/photo-1618773928121-c32242b61b4a?auto=format&fit=crop&q=80&w=1000",
-                features: ["City View", "Mini-bar", "Complimentary Breakfast", "High-speed WiFi"]
-            },
-            executive: {
-                title: "Executive City Suite",
-                price: "$750",
-                desc: "Designed for the modern traveler, this suite offers an ergonomic workspace, private lounge, and a stunning skyline vista.",
-                img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=1000",
-                features: ["Skyline View", "Airport Transfer", "VIP Lounge Access", "Nespresso Station"]
-            },
-            presidential: {
-                title: "Presidential Penthouse",
-                price: "$1,800",
-                desc: "The pinnacle of luxury. Two floors of opulence, a private infinity pool, personal butler service, and 360-degree city views.",
-                img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1000",
-                features: ["Private Pool", "24/7 Butler", "Private Chef", "Cinema Room"]
-            }
+        /**
+         * NEO-TIC GAME ENGINE
+         * Developed by Leo Tanaka
+         */
+        
+        const state = {
+            board: Array(9).fill(null),
+            currentPlayer: 'X',
+            isGameActive: true,
+            gameMode: 'pvp', // pvp or pva
+            scores: { X: 0, O: 0 }
         };
 
-        function switchRoom(type) {
-            const data = roomData[type];
-            
-            // Update text and image
-            document.getElementById('room-title').innerText = data.title;
-            document.getElementById('room-price').innerText = data.price;
-            document.getElementById('room-desc').innerText = data.desc;
-            
-            const img = document.getElementById('room-image');
-            img.style.opacity = '0';
-            setTimeout(() => {
-                img.src = data.img;
-                img.style.opacity = '1';
-            }, 200);
+        const WINNING_COMBINATIONS = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
 
-            // Update Features
-            const featureContainer = document.getElementById('room-features');
-            featureContainer.innerHTML = data.features.map(f => `
-                <div class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200">
-                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-sm font-semibold text-slate-700">${f}</span>
-                </div>
-            `).join('');
+        const cells = document.querySelectorAll('.game-cell');
+        const turnIndicator = document.getElementById('turn-indicator');
+        const resetBtn = document.getElementById('reset-btn');
+        const modeSelect = document.getElementById('game-mode');
+        const modeDisplay = document.getElementById('game-mode-display');
+        const scoreXDisp = document.getElementById('score-x');
+        const scoreODisp = document.getElementById('score-o');
 
-            // Update buttons
-            ['deluxe', 'executive', 'presidential'].forEach(t => {
-                const btn = document.getElementById(`btn-${t}`);
-                if (t === type) {
-                    btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
-                    btn.classList.remove('text-slate-600');
-                } else {
-                    btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
-                    btn.classList.add('text-slate-600');
-                }
+        function init() {
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => handleCellClick(cell));
+            });
+
+            resetBtn.addEventListener('click', resetGame);
+            modeSelect.addEventListener('change', (e) => {
+                state.gameMode = e.target.value;
+                modeDisplay.innerText = state.gameMode === 'pvp' ? 'Mode: Human vs Human' : 'Mode: Human vs AI';
+                resetGame();
             });
         }
 
-        // Mobile Menu
-        document.getElementById('mobile-menu-btn').onclick = () => {
-            alert('Mobile menu navigation would expand here in the full app version!');
-        };
+        function handleCellClick(cell) {
+            const index = parseInt(cell.getAttribute('data-index'));
+
+            if (state.board[index] || !state.isGameActive) return;
+
+            makeMove(index, state.currentPlayer);
+
+            if (state.isGameActive && state.gameMode === 'pva' && state.currentPlayer === 'O') {
+                setTimeout(aiMove, 500);
+            }
+        }
+
+        function makeMove(index, player) {
+            state.board[index] = player;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            cell.innerText = player;
+            cell.classList.add(player === 'X' ? 'x-mark' : 'o-mark');
+
+            if (checkWin(player)) {
+                endGame(player);
+            } else if (state.board.every(cell => cell !== null)) {
+                endGame('draw');
+            } else {
+                state.currentPlayer = state.currentPlayer === 'X' ? 'O' : 'X';
+                updateTurnUI();
+            }
+        }
+
+        function updateTurnUI() {
+            const playerSpan = state.currentPlayer === 'X' ? 
+                `<span class="x-mark">X</span>` : `<span class="o-mark">O</span>`;
+            turnIndicator.innerHTML = `Player ${playerSpan}'s Turn`;
+        }
+
+        function checkWin(player) {
+            return WINNING_COMBINATIONS.some(combo => {
+                if (combo.every(index => state.board[index] === player)) {
+                    highlightWinningCombo(combo);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        function highlightWinningCombo(combo) {
+            combo.forEach(index => {
+                document.querySelector(`[data-index="${index}"]`).classList.add('winning-cell');
+            });
+        }
+
+        function endGame(result) {
+            state.isGameActive = false;
+            if (result === 'draw') {
+                turnIndicator.innerHTML = `<span class="text-slate-400">It's a Draw! 🤝</span>`;
+            } else {
+                turnIndicator.innerHTML = `<span class="${result === 'X' ? 'x-mark' : 'o-mark'}">Player ${result} Wins! 🎉</span>`;
+                state.scores[result]++;
+                updateScores();
+            }
+        }
+
+        function updateScores() {
+            scoreXDisp.innerText = state.scores.X;
+            scoreODisp.innerText = state.scores.O;
+        }
+
+        function resetGame() {
+            state.board = Array(9).fill(null);
+            state.currentPlayer = 'X';
+            state.isGameActive = true;
+            
+            cells.forEach(cell => {
+                cell.innerText = '';
+                cell.className = 'game-cell glass rounded-2xl flex items-center justify-center text-5xl font-black cursor-pointer';
+            });
+            updateTurnUI();
+        }
+
+        /**
+         * AI LOGIC (Minimax)
+         */
+        function aiMove() {
+            let bestScore = -Infinity;
+            let move;
+
+            for (let i = 0; i < 9; i++) {
+                if (state.board[i] === null) {
+                    state.board[i] = 'O';
+                    let score = minimax(state.board, 0, false);
+                    state.board[i] = null;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = i;
+                    }
+                }
+            }
+            makeMove(move, 'O');
+        }
+
+        const scores = { X: -10, O: 10, draw: 0 };
+
+        function minimax(board, depth, isMaximizing) {
+            if (checkSimpleWin('O')) return 10 - depth;
+            if (checkSimpleWin('X')) return depth - 10;
+            if (board.every(s => s !== null)) return 0;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === null) {
+                        board[i] = 'O';
+                        let score = minimax(board, depth + 1, false);
+                        board[i] = null;
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === null) {
+                        board[i] = 'X';
+                        let score = minimax(board, depth + 1, true);
+                        board[i] = null;
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        }
+
+        function checkSimpleWin(player) {
+            return WINNING_COMBINATIONS.some(combo => combo.every(idx => state.board[idx] === player));
+        }
+
+        /**
+         * UI INTERACTION LOGIC
+         */
+        const leadForm = document.getElementById('lead-form');
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('close-modal');
+
+        leadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            leadForm.reset();
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        // Global start
+        init();
     </script>
 </body>
 </html>

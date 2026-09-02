@@ -1,214 +1,294 @@
-Here is the production-ready implementation of `motion-effects.js`. I have structured this as a modular Class to ensure it doesn't pollute the global namespace and can be initialized easily.
-
-### 1. The CSS Framework (`motion-styles.css`)
-Add these to your stylesheet to handle the hardware acceleration and base states.
-
-:root {
-    --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: var(--transition-smooth);
-    will-change: transform, opacity;
-}
-
-.reveal.active {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.magnetic-wrap {
-    display: inline-block;
-    transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.theme-transitioning {
-    transition: background-color 0.8s ease, color 0.8s ease !important;
-}
-
-.modal-spring {
-    transform: scale(0.9) opacity(0);
-    transition: var(--transition-spring);
-}
-
-.modal-spring.open {
-    transform: scale(1) opacity(1);
-}
-
-### 2. The Logic (`motion-effects.js`)
-
 /**
- * motion-effects.js
- * Creative Motion & Interaction Layer for Hotel Website
- * Designed by Elena Rostova
+ * motion-effects.js | Tic Tac Toe Interactive Engine
+ * Engineer: Elena Rostova
+ * Focus: 60fps Micro-interactions, Spring Physics, & Hardware Acceleration
  */
 
-class HotelMotionEngine {
-    constructor() {
-        this.init();
-    }
+const MotionEngine = (() => {
+    const CONFIG = {
+        springStiffness: 0.4,
+        springDamping: 0.7,
+        colors: {
+            accentX: '#00f2ff',
+            accentO: '#ff007a',
+            bg: '#0a0a0c',
+            glass: 'rgba(255, 255, 255, 0.03)'
+        }
+    };
 
-    init() {
-        this.initRevealOnScroll();
-        this.initMagneticButtons();
-        this.initParticleField();
-        this.initModalDynamics();
-        this.initThemeToggle();
+    const setupStyles = () => {
+        const style = document.createElement('style');
+        style.textContent = `
+            :root {
+                --bg: ${CONFIG.colors.bg};
+                --glass: ${CONFIG.colors.glass};
+                --accent-x: ${CONFIG.colors.accentX};
+                --accent-o: ${CONFIG.colors.accentO};
+            }
+            body { 
+                background: var(--bg); 
+                color: white; 
+                font-family: 'Inter', system-ui, sans-serif; 
+                margin: 0; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                height: 100vh; 
+                overflow: hidden; 
+            }
+            .game-container {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2rem;
+                perspective: 1000px;
+            }
+            .status {
+                font-size: 1.5rem;
+                font-weight: 300;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                opacity: 0;
+                transform: translateY(-20px);
+                animation: slideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(3, 100px);
+                grid-template-rows: repeat(3, 100px);
+                gap: 12px;
+                padding: 12px;
+                background: var(--glass);
+                backdrop-filter: blur(10px);
+                border-radius: 24px;
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+                transform: scale(0.9);
+                opacity: 0;
+                animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            }
+            .cell {
+                width: 100px;
+                height: 100px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 12px;
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 3rem;
+                font-weight: 800;
+                transition: background 0.3s ease, transform 0.1s ease;
+                will-change: transform, background;
+                position: relative;
+                overflow: hidden;
+                user-select: none;
+            }
+            .cell:hover {
+                background: rgba(255,255,255,0.1);
+                transform: translateY(-2px);
+            }
+            .cell:active {
+                transform: scale(0.95);
+            }
+            .cell.x { color: var(--accent-x); text-shadow: 0 0 15px var(--accent-x); }
+            .cell.o { color: var(--accent-o); text-shadow: 0 0 15px var(--accent-o); }
+            
+            .symbol-anim {
+                animation: symbolSpring 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            }
+            
+            .win-line {
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                pointer-events: none;
+                z-index: 10;
+            }
+            .win-path {
+                stroke-dasharray: 1000;
+                stroke-dashoffset: 1000;
+                animation: drawLine 0.6s ease-out forwards;
+                stroke-width: 8;
+                stroke-linecap: round;
+                filter: blur(1px);
+            }
+
+            @keyframes slideDown { to { opacity: 1; transform: translateY(0); } }
+            @keyframes popIn { to { opacity: 1; transform: scale(1); } }
+            @keyframes symbolSpring { 
+                0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+                100% { transform: scale(1) rotate(0); opacity: 1; }
+            }
+            @keyframes drawLine { to { stroke-dashoffset: 0; } }
+
+            .reset-btn {
+                margin-top: 2rem;
+                padding: 12px 24px;
+                background: transparent;
+                color: white;
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .reset-btn:hover {
+                background: white;
+                color: black;
+                transform: scale(1.05);
+                box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    const createGame = () => {
+        const container = document.createElement('div');
+        container.className = 'game-container';
         
-        // Optimization: Listen for resize to recalculate positions if necessary
-        window.addEventListener('resize', () => this.handleResize());
-    }
+        const status = document.createElement('div');
+        status.className = 'status';
+        status.innerText = "Player X's Turn";
+        
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        
+        const winSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        winSvg.setAttribute('class', 'win-line');
+        winSvg.setAttribute('viewBox', '0 0 324 324'); // Grid size approx
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('class', 'win-path');
+        path.setAttribute('fill', 'none');
+        winSvg.appendChild(path);
+        
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'reset-btn';
+        resetBtn.innerText = 'Reset Experience';
 
-    /**
-     * Smooth Reveal on Scroll
-     * Uses IntersectionObserver for high performance
-     */
-    initRevealOnScroll() {
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: "0px 0px -50px 0px"
+        container.append(status, grid, winSvg, resetBtn);
+        document.body.appendChild(container);
+
+        return { status, grid, path, resetBtn, winSvg };
+    };
+
+    const LogicEngine = (() => {
+        let board = Array(9).fill(null);
+        let currentPlayer = 'X';
+        let gameActive = true;
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+            [0, 4, 8], [2, 4, 6]             // Diags
+        ];
+
+        return {
+            checkWin: () => {
+                for (let cond of winConditions) {
+                    const [a, b, c] = cond;
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        return { winner: board[a], line: cond };
+                    }
+                }
+                if (!board.includes(null)) return { winner: 'Draw' };
+                return null;
+            },
+            makeMove: (index) => {
+                if (board[index] || !gameActive) return null;
+                board[index] = currentPlayer;
+                return currentPlayer;
+            },
+            togglePlayer: () => {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                return currentPlayer;
+            },
+            reset: () => {
+                board.fill(null);
+                currentPlayer = 'X';
+                gameActive = true;
+                return currentPlayer;
+            },
+            setInactive: () => { gameActive = false; }
         };
+    })();
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    // Once revealed, we can stop observing this element
-                    observer.unobserve(entry.target);
+    const init = () => {
+        setupStyles();
+        const { status, grid, path, resetBtn, winSvg } = createGame();
+        
+        const cells = [];
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.index = i;
+            
+            cell.addEventListener('click', (e) => {
+                const move = LogicEngine.makeMove(i);
+                if (!move) return;
+
+                // Visual Update
+                cell.innerHTML = `<span class="symbol-anim">${move}</span>`;
+                cell.classList.add(move.toLowerCase());
+
+                // Ripple Effect
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple'; 
+                // Simplified ripple logic via CSS if added, or JS:
+                cell.style.backgroundColor = 'rgba(255,255,255,0.2)';
+                setTimeout(() => cell.style.backgroundColor = '', 200);
+
+                const result = LogicEngine.checkWin();
+                if (result) {
+                    LogicEngine.setInactive();
+                    if (result.winner === 'Draw') {
+                        status.innerText = "It's a Kinetic Tie";
+                    } else {
+                        status.innerText = `${result.winner} Dominates`;
+                        drawWinLine(result.line, path);
+                    }
+                } else {
+                    const next = LogicEngine.togglePlayer();
+                    status.innerText = `Player ${next}'s Turn`;
                 }
             });
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    }
-
-    /**
-     * Magnetic Button Interaction
-     * Attracts the button slightly toward the cursor for a tactile feel
-     */
-    initMagneticButtons() {
-        const magnets = document.querySelectorAll('.magnetic-wrap');
-        
-        magnets.forEach(magnet => {
-            magnet.addEventListener('mousemove', (e) => {
-                const rect = magnet.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                
-                const moveX = (e.clientX - centerX) * 0.4; // Strength factor
-                const moveY = (e.clientY - centerY) * 0.4;
-                
-                magnet.style.transform = `translate(${moveX}px, ${moveY}px)`;
-            });
-
-            magnet.addEventListener('mouseleave', () => {
-                magnet.style.transform = `translate(0px, 0px)`;
-            });
-        });
-    }
-
-    /**
-     * Floating Particle Effects
-     * Creates subtle atmospheric floating elements (e.g., for Hero sections)
-     */
-    initParticleField() {
-        const container = document.querySelector('.particle-container');
-        if (!container) return;
-
-        const particleCount = 15;
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'hotel-particle';
             
-            // Randomize position and animation delay
-            const size = Math.random() * 4 + 2 + 'px';
-            particle.style.width = size;
-            particle.style.height = size;
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.top = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 5 + 's';
-            particle.style.opacity = Math.random() * 0.5;
-
-            container.appendChild(particle);
+            grid.appendChild(cell);
+            cells.push(cell);
         }
-    }
 
-    /**
-     * Modal Spring Dynamics
-     * Handles the entrance and exit of booking modals
-     */
-    initModalDynamics() {
-        const modal = document.querySelector('.modal-spring');
-        const trigger = document.querySelector('.open-booking');
-        const close = document.querySelector('.close-modal');
+        const drawWinLine = (line, pathElement) => {
+            const coords = line.map(idx => {
+                const cell = cells[idx];
+                const rect = cell.getBoundingClientRect();
+                const gridRect = grid.getBoundingClientRect();
+                return {
+                    x: rect.left - gridRect.left + rect.width / 2,
+                    y: rect.top - gridRect.top + rect.height / 2
+                };
+            });
 
-        if (!modal || !trigger) return;
+            const d = `M ${coords[0].x} ${coords[0].y} L ${coords[2].x} ${coords[2].y}`;
+            pathElement.setAttribute('d', d);
+            pathElement.setAttribute('stroke', LogicEngine.board[line[0]] === 'X' ? CONFIG.colors.accentX : CONFIG.colors.accentO);
+        };
 
-        trigger.addEventListener('click', () => {
-            modal.classList.add('open');
-            document.body.style.overflow = 'hidden'; // Prevent scroll
+        resetBtn.addEventListener('click', () => {
+            const next = LogicEngine.reset();
+            status.innerText = `Player ${next}'s Turn`;
+            cells.forEach(c => {
+                c.innerHTML = '';
+                c.className = 'cell';
+            });
+            path.setAttribute('d', '');
         });
+    };
 
-        close.addEventListener('click', () => {
-            modal.classList.remove('open');
-            document.body.style.overflow = '';
-        });
-    }
+    return { init };
+})();
 
-    /**
-     * Theme Toggling Animations
-     * Smooth transition between Day and Night modes
-     */
-    initThemeToggle() {
-        const toggle = document.querySelector('.theme-toggle');
-        if (!toggle) return;
-
-        toggle.addEventListener('click', () => {
-            document.body.classList.add('theme-transitioning');
-            
-            // Toggle theme class
-            document.body.classList.toggle('dark-mode');
-            
-            // Remove transition class after animation completes to maintain performance
-            setTimeout(() => {
-                document.body.classList.remove('theme-transitioning');
-            }, 800);
-        });
-    }
-
-    handleResize() {
-        // Reset animations or recalculate if layout shifts drastically
-    }
-}
-
-// Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.HotelMotion = new HotelMotionEngine();
-});
-
-### 3. Supplementary Particle CSS
-Add this to your CSS to enable the floating particle movement.
-
-.particle-container {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.hotel-particle {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    animation: float-particle 10s infinite ease-in-out;
-}
-
-@keyframes float-particle {
-    0%, 100% { transform: translateY(0) translateX(0); }
-    33% { transform: translateY(-20px) translateX(10px); }
-    66% { transform: translateY(-10px) translateX(-10px); }
-}
+// Execute
+window.addEventListener('DOMContentLoaded', () => MotionEngine.init());

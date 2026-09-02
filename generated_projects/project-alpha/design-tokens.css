@@ -1,215 +1,180 @@
 /**
- * DESIGN SYSTEM: Luxury Hotel Project
- * Author: Sophia Chen, Lead UI/UX Designer
- * File: design-tokens.css
- * Version: 1.0.0
- * Description: Comprehensive design tokens including colors, typography, 
- * glassmorphism, and component styles for a high-end hospitality experience.
+ * PROJECT: Tic Tac Toe Premium Edition
+ * ARCHITECT: Sophia Chen, Lead UI/UX Designer
+ * VERSION: 1.0.0
+ * DESCRIPTION: High-fidelity design tokens for a modern, glassmorphic gaming interface.
  */
 
 :root {
-    /* --- COLOR PALETTE: CORE --- */
-    /* Primary: Deep Royal Midnight & Champagne Gold */
-    --color-primary-600: #1a1a1a; /* Deep Obsidian */
-    --color-primary-500: #2c2c2c;
-    --color-primary-400: #404040;
-    --color-primary-300: #737373;
-    --color-primary-200: #a3a3a3;
-    --color-primary-100: #d4d4d4;
-
-    --color-accent-gold: #c5a059;    /* Luxury Gold */
-    --color-accent-gold-light: #dfc28d;
-    --color-accent-gold-dark: #a67c37;
-    --color-accent-white: #ffffff;
-    --color-accent-ivory: #fdfcf8;
-
-    /* Secondary: Soft Slate & Warm Taupe */
-    --color-secondary-500: #5a5a5a;
-    --color-secondary-200: #e5e5e5;
-    --color-neutral-100: #f8f9fa;
-    --color-neutral-200: #e9ecef;
-    --color-neutral-300: #dee2e6;
-
-    /* Status Colors */
-    --color-success: #4caf50;
-    --color-error: #f44336;
-    --color-warning: #ff9800;
-    --color-info: #2196f3;
-
-    /* --- THEME: LIGHT MODE (Default) --- */
-    --bg-body: var(--color-accent-ivory);
-    --bg-card: var(--color-accent-white);
-    --bg-overlay: rgba(0, 0, 0, 0.6);
-    --text-main: var(--color-primary-600);
-    --text-muted: var(--color-secondary-500);
-    --text-inverse: var(--color-accent-white);
-    --border-color: var(--color-neutral-300);
-    --input-bg: var(--color-neutral-100);
-    --shadow-color: rgba(0, 0, 0, 0.1);
-
-    /* --- TYPOGRAPHY --- */
-    --font-serif: 'Playfair Display', serif;    /* For Headlines & Elegance */
-    --font-sans: 'Montserrat', sans-serif;      /* For UI & Body text */
+    /* --- Color Palette: Core --- */
+    --color-bg-main: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-surface: rgba(30, 41, 59, 0.7);
+    --color-surface-light: rgba(255, 255, 255, 0.05);
     
-    --fs-xs: 0.75rem;
-    --fs-sm: 0.875rem;
-    --fs-base: 1rem;
-    --fs-md: 1.25rem;
-    --fs-lg: 1.5rem;
-    --fs-xl: 2rem;
-    --fs-xxl: 3rem;
-    --fs-display: 4.5rem;
+    /* --- Brand & Action Colors --- */
+    --color-primary: #6366f1;          /* Indigo - Base */
+    --color-primary-glow: #818cf8;    /* Lighter Indigo */
+    --color-secondary: #ec4899;       /* Pink - Base */
+    --color-secondary-glow: #f472b6;  /* Lighter Pink */
+    --color-accent: #06b6d4;          /* Cyan */
+    
+    /* --- Player Tokens --- */
+    --player-x-color: var(--color-primary);
+    --player-x-glow: rgba(99, 102, 241, 0.5);
+    --player-o-color: var(--color-secondary);
+    --player-o-glow: rgba(236, 72, 153, 0.5);
+    
+    /* --- Feedback & Status --- */
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-highlight: rgba(255, 255, 255, 0.2);
 
-    --fw-light: 300;
-    --fw-regular: 400;
-    --fw-medium: 500;
-    --fw-semibold: 600;
-    --fw-bold: 700;
+    /* --- Typography --- */
+    --font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
 
-    --lh-tight: 1.2;
-    --lh-normal: 1.6;
-    --lh-relaxed: 1.8;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
 
-    /* --- SPACING & SIZING --- */
+    /* --- Spacing & Layout --- */
     --space-xs: 0.25rem;
     --space-sm: 0.5rem;
     --space-md: 1rem;
-    --space-lg: 2rem;
-    --space-xl: 4rem;
-    --space-xxl: 8rem;
-
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 16px;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    
+    /* --- Borders & Radius --- */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 24px;
     --radius-full: 9999px;
 
-    /* --- ELEVATION (SHADOWS) --- */
-    --shadow-sm: 0 2px 4px var(--shadow-color);
-    --shadow-md: 0 4px 12px var(--shadow-color);
-    --shadow-lg: 0 12px 24px var(--shadow-color);
-    --shadow-inner: inset 0 2px 4px var(--shadow-color);
-
-    /* --- TRANSITIONS --- */
-    --transition-fast: 150ms ease;
-    --transition-normal: 300ms ease;
-    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* --- Glassmorphism Effects --- */
+    --glass-blur: blur(16px);
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    
+    /* --- Animation & Transitions --- */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* --- DARK MODE OVERRIDES --- */
-[data-theme="dark"] {
-    --bg-body: #121212;
-    --bg-card: #1e1e1e;
-    --bg-overlay: rgba(255, 255, 255, 0.1);
-    --text-main: var(--color-accent-ivory);
-    --text-muted: var(--color-primary-200);
-    --text-inverse: var(--color-primary-600);
-    --border-color: #333333;
-    --input-bg: #252525;
-    --shadow-color: rgba(0, 0, 0, 0.5);
+/* --- Utility Classes --- */
+
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
 }
 
-/* --- GLASSMORPHISM UTILITIES --- */
-.glass {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: var(--shadow-md);
-}
-
-.glass-dark {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: var(--shadow-lg);
-}
-
-/* --- COMPONENT STYLES: BUTTONS --- */
-.btn {
-    display: inline-flex;
+.glass-cell {
+    background: var(--color-surface);
+    border: var(--glass-border);
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
+    cursor: pointer;
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-sans);
-    font-weight: var(--fw-medium);
-    text-decoration: none;
-    transition: var(--transition-normal);
-    cursor: pointer;
-    border: 2px solid transparent;
+    font-weight: var(--font-weight-bold);
+}
+
+.glass-cell:hover {
+    background: var(--color-surface-light);
+    border-color: var(--color-border-highlight);
+    transform: translateY(-2px);
+}
+
+.glass-cell:active {
+    transform: scale(0.95);
 }
 
 .btn-primary {
-    background-color: var(--color-accent-gold);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-glow));
     color: white;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    border: none;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    box-shadow: 0 4px 14px 0 var(--player-x-glow);
 }
 
 .btn-primary:hover {
-    background-color: var(--color-accent-gold-dark);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 20px 0 var(--player-x-glow);
 }
 
-.btn-outline {
-    background-color: transparent;
-    border-color: var(--color-accent-gold);
-    color: var(--color-accent-gold);
+.badge-pill {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.btn-outline:hover {
-    background-color: var(--color-accent-gold);
+.badge-x {
+    background: var(--player-x-glow);
     color: white;
+    border: 1px solid var(--color-primary);
 }
 
-.btn-ghost {
-    background-color: transparent;
-    color: var(--text-main);
+.badge-o {
+    background: var(--player-o-glow);
+    color: white;
+    border: 1px solid var(--color-secondary);
 }
 
-.btn-ghost:hover {
-    background-color: var(--color-neutral-200);
+/* --- Game Specific Token Overrides --- */
+
+.player-x-text {
+    color: var(--player-x-color);
+    text-shadow: 0 0 15px var(--player-x-glow);
+    font-size: var(--text-3xl);
 }
 
-/* --- TYPOGRAPHY CLASSES --- */
-.text-display {
-    font-family: var(--font-serif);
-    font-size: var(--fs-display);
-    line-height: var(--lh-tight);
-    font-weight: var(--fw-bold);
-    color: var(--text-main);
+.player-o-text {
+    color: var(--player-o-color);
+    text-shadow: 0 0 15px var(--player-o-glow);
+    font-size: var(--text-3xl);
 }
 
-.text-heading {
-    font-family: var(--font-serif);
-    font-size: var(--fs-xl);
-    line-height: var(--lh-tight);
-    color: var(--text-main);
+.win-highlight {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 20px var(--color-accent);
+    animation: pulse-glow 2s infinite;
 }
 
-.text-body {
-    font-family: var(--font-sans);
-    font-size: var(--fs-base);
-    line-height: var(--lh-normal);
-    color: var(--text-muted);
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 10px var(--color-accent); }
+    50% { box-shadow: 0 0 25px var(--color-accent); }
+    100% { box-shadow: 0 0 10px var(--color-accent); }
 }
 
-/* --- HELPER CLASSES --- */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--space-md);
-}
-
-.section-padding {
-    padding: var(--space-xl) 0;
-}
-
-.text-gold {
-    color: var(--color-accent-gold) !important;
-}
-
-.bg-gold {
-    background-color: var(--color-accent-gold) !important;
+/* --- Accessibility Focus Rings --- */
+*:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
 }

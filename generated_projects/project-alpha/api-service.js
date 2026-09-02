@@ -1,193 +1,194 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
 const router = express.Router();
 
-/**
- * =============================================================================
- * DATABASE SCHEMAS
- * =============================================================================
- */
+// --- CONFIGURATION & SECURITY ---
+const JWT_SECRET = process.env.JWT_SECRET || 'v_rao_secure_secret_2024';
+const PORT = process.env.PORT || 5000;
 
-// Room Schema
-const RoomSchema = new mongoose.Schema({
-    roomNumber: { type: String, required: true, unique: true },
-    type: { type: String, enum: ['Single', 'Double', 'Suite', 'Deluxe'], required: true },
-    pricePerNight: { type: Number, required: true },
-    capacity: { type: Number, required: true },
-    amenities: [{ type: String }],
-    status: { type: String, enum: ['Available', 'Booked', 'Maintenance'], default: 'Available' },
-    description: String,
-    images: [String]
-}, { timestamps: true });
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
 
-// User/Guest Schema
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100 
+});
+app.use(limiter);
+
+// --- MONGOOSE SCHEMAS ---
+
 const UserSchema = new mongoose.Schema({
-    fullName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }, // In production, use bcrypt to hash
-    phone: String,
-    role: { type: String, enum: ['guest', 'admin'], default: 'guest' }
+    username: { type: String, required: true, unique: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    stats: {
+        wins: { type: Number, default: 0 },
+        losses: { type: Number, default: 0 },
+        draws: { type: Number, default: 0 },
+        gamesPlayed: { type: Number, default: 0 }
+    },
+    createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-// Booking Schema
-const BookingSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
-    checkInDate: { type: Date, required: true },
-    checkOutDate: { type: Date, required: true },
-    totalPrice: { type: Number, required: true },
-    paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Cancelled'], default: 'Pending' },
-    specialRequests: String
+const GameSchema = new mongoose.Schema({
+    players: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    board: { 
+        type: [String], 
+        default: [null, null, null, null, null, null, null, null, null],
+        validate: [val => val.length === 9, 'Board must have exactly 9 cells']
+    },
+    turn: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    turnSymbol: { type: String, enum: ['X', 'O'], default: 'X' },
+    status: { type: String, enum: ['ONGOING', 'DRAW', 'WINNER'], default: 'ONGOING' },
+    winner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    startTime: { type: Date, default: Date.now },
+    endTime: { type: Date }
 }, { timestamps: true });
 
-// Review Schema
-const ReviewSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
-    rating: { type: Number, min: 1, max: 5, required: true },
-    comment: String
-}, { timestamps: true });
-
-const Room = mongoose.model('Room', RoomSchema);
 const User = mongoose.model('User', UserSchema);
-const Booking = mongoose.model('Booking', BookingSchema);
-const Review = mongoose.model('Review', ReviewSchema);
+const Game = mongoose.model('Game', GameSchema);
 
-/**
- * =============================================================================
- * MIDDLEWARE
- * =============================================================================
- */
+// --- MIDDLEWARE ---
 
-// Error Handling Wrapper
-const asyncHandler = (fn) => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+const authenticate = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) throw new Error('Authentication token required');
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'Unauthorized', error: err.message });
+    }
 };
 
-/**
- * =============================================================================
- * API ENDPOINTS
- * =============================================================================
- */
-
-// --- ROOMS ENDPOINTS ---
-
-// Get all available rooms with filters
-router.get('/rooms', asyncHandler(async (req, res) => {
-    const { type, minPrice, maxPrice } = req.query;
-    let query = { status: 'Available' };
-
-    if (type) query.type = type;
-    if (minPrice || maxPrice) {
-        query.pricePerNight = {};
-        if (minPrice) query.pricePerNight.$gte = Number(minPrice);
-        if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
-    }
-
-    const rooms = await Room.find(query);
-    res.json({ success: true, data: rooms });
-}));
-
-// Get specific room details
-router.get('/rooms/:id', asyncHandler(async (req, res) => {
-    const room = await Room.findById(req.params.id);
-    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
-    res.json({ success: true, data: room });
-}));
-
-// Create room (Admin Only)
-router.post('/rooms', asyncHandler(async (req, res) => {
-    const room = await Room.create(req.body);
-    res.status(201).json({ success: true, data: room });
-}));
-
-// Update room status or details (Admin Only)
-router.put('/rooms/:id', asyncHandler(async (req, res) => {
-    const room = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json({ success: true, data: room });
-}));
-
-// --- USER ENDPOINTS ---
-
-// Register user
-router.post('/auth/register', asyncHandler(async (req, res) => {
-    const user = await User.create(req.body);
-    res.status(201).json({ success: true, data: { userId: user._id, email: user.email } });
-}));
-
-// --- BOOKING ENDPOINTS ---
-
-// Create a new booking
-router.post('/bookings', asyncHandler(async (req, res) => {
-    const { userId, roomId, checkInDate, checkOutDate } = req.body;
-
-    // Check if room is available for these dates
-    const existingBooking = await Booking.findOne({
-        roomId,
-        $or: [
-            { checkInDate: { $lte: checkOutDate }, checkOutDate: { $gte: checkInDate } }
-        ]
-    });
-
-    if (existingBooking) {
-        return res.status(400).json({ success: false, message: 'Room is already booked for these dates' });
-    }
-
-    // Calculate Price (simplified logic)
-    const room = await Room.findById(roomId);
-    const days = (new Date(checkOutDate) - new Date(checkInDate)) / (1000 * 60 * 60 * 24);
-    const totalPrice = days * room.pricePerNight;
-
-    const booking = await Booking.create({ ...req.body, totalPrice });
-    
-    // Mark room as booked (simplified)
-    await Room.findByIdAndUpdate(roomId, { status: 'Booked' });
-
-    res.status(201).json({ success: true, data: booking });
-}));
-
-// Get user's bookings
-router.get('/bookings/user/:userId', asyncHandler(async (req, res) => {
-    const bookings = await Booking.find({ userId: req.params.userId }).populate('roomId');
-    res.json({ success: true, data: bookings });
-}));
-
-// Cancel booking
-router.delete('/bookings/:id', asyncHandler(async (req, res) => {
-    const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
-
-    await Room.findByIdAndUpdate(booking.roomId, { status: 'Available' });
-    await Booking.findByIdAndDelete(req.params.id);
-
-    res.json({ success: true, message: 'Booking cancelled successfully' });
-}));
-
-// --- REVIEW ENDPOINTS ---
-
-// Submit a room review
-router.post('/reviews', asyncHandler(async (req, res) => {
-    const review = await Review.create(req.body);
-    res.status(201).json({ success: true, data: review });
-}));
-
-// Get reviews for a specific room
-router.get('/reviews/room/:roomId', asyncHandler(async (req, res) => {
-    const reviews = await Review.find({ roomId: req.params.roomId }).populate('userId', 'fullName');
-    res.json({ success: true, data: reviews });
-}));
-
-/**
- * =============================================================================
- * GLOBAL ERROR HANDLER
- * =============================================================================
- */
-router.use((err, req, res, next) => {
-    console.error(err.stack);
+const globalErrorHandler = (err, req, res, next) => {
     res.status(err.status || 500).json({
         success: false,
-        error: err.message || 'Internal Server Error'
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'production' ? {} : err.stack
     });
+};
+
+// --- GAME LOGIC HELPERS ---
+
+const checkWinner = (board) => {
+    const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+        [0, 4, 8], [2, 4, 6]             // Diagonals
+    ];
+
+    for (let pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            return board[a];
+        }
+    }
+    if (!board.includes(null)) return 'DRAW';
+    return null;
+};
+
+// --- API ENDPOINTS ---
+
+// AUTHENTICATION
+router.post('/auth/register', async (req, res, next) => {
+    try {
+        const { username, email, password } = req.body;
+        const user = await User.create({ username, email, password });
+        res.status(201).json({ success: true, data: { userId: user._id }, message: 'User registered successfully' });
+    } catch (err) { next(err); }
 });
 
-module.exports = router;
+router.post('/auth/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email, password });
+        if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '24h' });
+        res.json({ success: true, data: { token, userId: user._id }, message: 'Login successful' });
+    } catch (err) { next(err); }
+});
+
+// GAME MANAGEMENT
+router.post('/games/create', authenticate, async (req, res, next) => {
+    try {
+        const { opponentId } = req.body;
+        if (!opponentId) return res.status(400).json({ success: false, message: 'Opponent ID required' });
+        
+        const game = await Game.create({
+            players: [req.user.id, opponentId],
+            turn: req.user.id,
+            turnSymbol: 'X'
+        });
+        res.status(201).json({ success: true, data: game, message: 'Game initialized' });
+    } catch (err) { next(err); }
+});
+
+router.get('/games/:id', authenticate, async (req, res, next) => {
+    try {
+        const game = await Game.findById(req.params.id).populate('players', 'username');
+        if (!game) return res.status(404).json({ success: false, message: 'Game not found' });
+        res.json({ success: true, data: game });
+    } catch (err) { next(err); }
+});
+
+router.patch('/games/:id/move', authenticate, async (req, res, next) => {
+    try {
+        const { cellIndex } = req.body;
+        const game = await Game.findById(req.params.id);
+
+        if (!game) return res.status(404).json({ success: false, message: 'Game not found' });
+        if (game.status !== 'ONGOING') return res.status(400).json({ success: false, message: 'Game is already finished' });
+        if (game.turn.toString() !== req.user.id) return res.status(403).json({ success: false, message: 'Not your turn' });
+        if (cellIndex < 0 || cellIndex > 8 || game.board[cellIndex] !== null) {
+            return res.status(400).json({ success: false, message: 'Invalid move' });
+        }
+
+        const currentSymbol = game.turnSymbol;
+        game.board[cellIndex] = currentSymbol;
+
+        const result = checkWinner(game.board);
+        if (result) {
+            game.status = result === 'DRAW' ? 'DRAW' : 'WINNER';
+            if (result !== 'DRAW') {
+                game.winner = req.user.id;
+                await User.findByIdAndUpdate(req.user.id, { $inc: { 'stats.wins': 1, 'stats.gamesPlayed': 1 } });
+                const opponent = game.players.find(p => p.toString() !== req.user.id);
+                await User.findByIdAndUpdate(opponent, { $inc: { 'stats.losses': 1, 'stats.gamesPlayed': 1 } });
+            } else {
+                await User.updateMany({ _id: { $in: game.players } }, { $inc: { 'stats.draws': 1, 'stats.gamesPlayed': 1 } });
+            }
+            game.endTime = new Date();
+        } else {
+            // Switch Turn
+            game.turn = game.players.find(p => p.toString() !== req.user.id);
+            game.turnSymbol = currentSymbol === 'X' ? 'O' : 'X';
+        }
+
+        await game.save();
+        res.json({ success: true, data: game, message: 'Move processed successfully' });
+    } catch (err) { next(err); }
+});
+
+// STATS
+router.get('/users/stats/:id', authenticate, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id).select('username stats');
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        res.json({ success: true, data: user });
+    } catch (err) { next(err); }
+});
+
+app.use('/api', router);
+app.use(globalErrorHandler);
+
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/tictactoe').then(() => {
+    app.listen(PORT, () => console.log(`API Service running on port ${PORT}`));
+});
